@@ -1,0 +1,103 @@
+// Genuin's fork: Maven publications of the artifacts Genuin's SDK consumes, mirroring Prebid's own
+// release (scripts/Maven) under a fork version.
+//
+//   ./gradlew publishGenuinToMavenLocal        # into ~/.m2, for local development
+//
+// What is published, and why this way:
+//  - org.prebid:prebid-mobile-sdk-core:<forkVersion> — the core module's release AAR, the one
+//    artifact our changes live in.
+//  - org.prebid:prebid-mobile-sdk:<forkVersion> — the umbrella the apps depend on: Prebid's own
+//    stub jar plus a dependency on the core above.
+// Their dependency lists are read from Prebid's release POMs, not from the Gradle build: the core
+// module depends on a local wrapper of the Open Measurement AAR (:omsdk-android), which is
+// released separately as org.prebid:prebid-mobile-sdk-open-measurement (unchanged, 1.4.1, from
+// Maven Central). Reading the official POMs keeps a fork release identical to an upstream one but
+// for the version.
+//
+// The fork version is only the published coordinate: BuildConfig.VERSION — what the SDK reports to
+// Prebid Server in every bid request — stays prebidSdkVersionName, so demand sees a normal SDK.
+
+ext.genuinForkVersion = "${prebidSdkVersionName}-genuin.1"
+
+def officialPom = { String module -> rootProject.file("scripts/Maven/${module}-pom.xml") }
+
+// Copies the official POM's <dependencies> into a generated one, resolving ${revision} (a sibling
+// Prebid artifact) to the fork version.
+def copyOfficialDependencies = { Node pomRoot, File pomFile ->
+    def official = new groovy.xml.XmlSlurper().parse(pomFile)
+    def dependencies = pomRoot.appendNode('dependencies')
+    official.dependencies.dependency.each { dep ->
+        def node = dependencies.appendNode('dependency')
+        node.appendNode('groupId', dep.groupId.text())
+        node.appendNode('artifactId', dep.artifactId.text())
+        node.appendNode('version', dep.version.text().replace('${revision}', rootProject.genuinForkVersion))
+        if (dep.scope.text()) {
+            node.appendNode('scope', dep.scope.text())
+        }
+    }
+}
+
+def describe = { MavenPom pom, String pomFile ->
+    def official = new groovy.xml.XmlSlurper().parse(officialPom(pomFile))
+    pom.name = official.name.text()
+    pom.description = "${official.description.text()} (Genuin fork: VAST ad info, playback controls, audio)"
+    pom.url = 'https://github.com/genuininc/prebid-mobile-android'
+    pom.licenses {
+        license {
+            name = 'The Apache License, Version 2.0'
+            url = 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+        }
+    }
+}
+
+project(':PrebidMobile-core') {
+    afterEvaluate {
+        publishing {
+            publications {
+                genuinCore(MavenPublication) {
+                    groupId = rootProject.artifactGroupId
+                    artifactId = 'prebid-mobile-sdk-core'
+                    version = rootProject.genuinForkVersion
+                    // The AAR itself is added once every project is evaluated (below): this script
+                    // configures the module before AGP has registered its variant tasks.
+                    pom {
+                        packaging = 'aar'
+                        describe(it, 'PrebidMobile-core')
+                        withXml { copyOfficialDependencies(asNode(), officialPom('PrebidMobile-core')) }
+                    }
+                }
+            }
+        }
+    }
+}
+
+project(':PrebidMobile') {
+    afterEvaluate {
+        publishing {
+            publications {
+                genuinUmbrella(MavenPublication) {
+                    groupId = rootProject.artifactGroupId
+                    artifactId = 'prebid-mobile-sdk'
+                    version = rootProject.genuinForkVersion
+                    artifact(rootProject.file('scripts/Maven/stub.jar'))
+                    pom {
+                        describe(it, 'PrebidMobile')
+                        withXml { copyOfficialDependencies(asNode(), officialPom('PrebidMobile')) }
+                    }
+                }
+            }
+        }
+    }
+}
+
+gradle.projectsEvaluated {
+    def core = project(':PrebidMobile-core')
+    core.publishing.publications.genuinCore.artifact(core.tasks.named('bundleReleaseAar'))
+}
+
+tasks.register('publishGenuinToMavenLocal') {
+    group = 'publishing'
+    description = "Publishes the Genuin fork (${genuinForkVersion}) of prebid-mobile-sdk and -core to ~/.m2."
+    dependsOn ':PrebidMobile-core:publishGenuinCorePublicationToMavenLocal',
+              ':PrebidMobile:publishGenuinUmbrellaPublicationToMavenLocal'
+}

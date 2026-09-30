@@ -10,3 +10,6 @@ ext {
     omSdkVersion = "1.4.1"
     omSdkModuleName = "omsdk-android"
 }
+
+// Genuin's fork: publications of the SDK under a fork version — see scripts/genuin/publishing.gradle.
+apply from: 'scripts/genuin/publishing.gradle'
