@@ -17,6 +17,7 @@
 package org.prebid.mobile.rendering.loading;
 
 import android.content.Context;
+import org.prebid.mobile.api.data.AdFormat;
 import org.prebid.mobile.LogUtil;
 import org.prebid.mobile.api.exceptions.AdException;
 import org.prebid.mobile.configuration.AdUnitConfiguration;
@@ -103,6 +104,10 @@ public class TransactionManager implements AdLoadListener, Transaction.Listener 
     }
 
     public void fetchVideoTransaction(AdUnitConfiguration adConfiguration, String vastXml) {
+        // A VAST document loaded directly (not from a bid) is audio when that is all the ad unit is.
+        adConfiguration.setAudioCreative(
+            adConfiguration.isAdType(AdFormat.AUDIO) && !adConfiguration.isAdType(AdFormat.VAST)
+        );
         creativeModelMakerBids.makeVideoModels(adConfiguration, vastXml);
     }
 

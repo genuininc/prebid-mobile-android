@@ -37,6 +37,7 @@ import org.prebid.mobile.rendering.parser.AdResponseParserVast;
 import org.prebid.mobile.rendering.utils.helpers.AppInfoManager;
 import org.prebid.mobile.rendering.utils.helpers.Utils;
 import org.prebid.mobile.rendering.video.VideoAdEvent;
+import org.prebid.mobile.api.data.VastAdInfo;
 import org.prebid.mobile.rendering.video.VideoCreativeModel;
 import org.prebid.mobile.test.utils.ResourceUtils;
 import org.robolectric.RobolectricTestRunner;
@@ -51,6 +52,8 @@ import java.util.List;
 
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.*;
 import static org.prebid.mobile.rendering.video.VideoAdEvent.Event.AD_IMPRESSION;
@@ -98,6 +101,74 @@ public class CreativeModelsMakerVastTest {
 
         CreativeModelsMaker.Result result = argumentCaptor.getValue();
         assertVastInline(result.creativeModels, false);
+    }
+
+    @Test
+    public void testMakeModelsAttachesVastAdInfo() throws Exception {
+        BaseNetworkTask.GetUrlResult adResponse = new BaseNetworkTask.GetUrlResult();
+        adResponse.responseString = ResourceUtils.convertResourceToString("vast_inline_ad_info.xml");
+        List<AdResponseParserBase> parsers = getVastParsers(adResponse);
+
+        CreativeModelsMakerVast creativeModelsMakerVast = new CreativeModelsMakerVast(null, mockListener);
+        creativeModelsMakerVast.makeModels(
+            adConfiguration,
+            (AdResponseParserVast) parsers.get(0),
+            (AdResponseParserVast) parsers.get(1)
+        );
+
+        ArgumentCaptor<CreativeModelsMaker.Result> argumentCaptor = ArgumentCaptor.forClass(CreativeModelsMaker.Result.class);
+        verify(mockListener).onCreativeModelReady(argumentCaptor.capture());
+        VideoCreativeModel videoModel = (VideoCreativeModel) argumentCaptor.getValue().creativeModels.get(0);
+        VastAdInfo info = videoModel.getVastAdInfo();
+
+        assertNotNull(info);
+        assertEquals("Summer Sale", info.getAdTitle());
+        assertEquals("Shop now", info.getCtaText());
+        // The model reports the same timing and click-through the player was given.
+        assertEquals(videoModel.getVastClickthroughUrl(), info.getClickThroughUrl());
+        assertEquals(videoModel.getMediaDuration(), info.getDurationMs());
+        assertEquals(videoModel.getSkipOffset(), info.getSkipOffsetMs());
+    }
+
+    @Test
+    public void testMakeModelsForAnAudioCreativePlaysItsAudioFile() throws Exception {
+        BaseNetworkTask.GetUrlResult adResponse = new BaseNetworkTask.GetUrlResult();
+        adResponse.responseString = ResourceUtils.convertResourceToString("vast_inline_audio.xml");
+        List<AdResponseParserBase> parsers = getVastParsers(adResponse);
+        adConfiguration.setAudioCreative(true);
+
+        new CreativeModelsMakerVast(null, mockListener).makeModels(
+            adConfiguration,
+            (AdResponseParserVast) parsers.get(0),
+            (AdResponseParserVast) parsers.get(1)
+        );
+
+        ArgumentCaptor<CreativeModelsMaker.Result> argumentCaptor = ArgumentCaptor.forClass(CreativeModelsMaker.Result.class);
+        verify(mockListener).onCreativeModelReady(argumentCaptor.capture());
+        VideoCreativeModel videoModel = (VideoCreativeModel) argumentCaptor.getValue().creativeModels.get(0);
+
+        assertTrue(videoModel.isAudio());
+        assertEquals("https://cdn.test/high.mp3", videoModel.getMediaUrl());
+    }
+
+    @Test
+    public void testMakeModelsForAVideoCreativeIgnoresItsAudioFiles() throws Exception {
+        BaseNetworkTask.GetUrlResult adResponse = new BaseNetworkTask.GetUrlResult();
+        adResponse.responseString = ResourceUtils.convertResourceToString("vast_inline_audio.xml");
+        List<AdResponseParserBase> parsers = getVastParsers(adResponse);
+
+        new CreativeModelsMakerVast(null, mockListener).makeModels(
+            adConfiguration,
+            (AdResponseParserVast) parsers.get(0),
+            (AdResponseParserVast) parsers.get(1)
+        );
+
+        ArgumentCaptor<CreativeModelsMaker.Result> argumentCaptor = ArgumentCaptor.forClass(CreativeModelsMaker.Result.class);
+        verify(mockListener).onCreativeModelReady(argumentCaptor.capture());
+        VideoCreativeModel videoModel = (VideoCreativeModel) argumentCaptor.getValue().creativeModels.get(0);
+
+        assertFalse(videoModel.isAudio());
+        assertEquals("https://cdn.test/video.mp4", videoModel.getMediaUrl());
     }
 
     // To test wrappers, we use a mock server to handle the vast wrapper redirect

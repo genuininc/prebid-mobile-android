@@ -81,4 +81,16 @@ public class AdFormatTest {
         assertEquals(EnumSet.noneOf(AdUnitFormat.class), AdFormat.toSet(null));
     }
 
+    @Test
+    public void adFormatsFromSet_audio() {
+        assertEquals(EnumSet.of(AdFormat.AUDIO), AdFormat.fromSet(EnumSet.of(AdUnitFormat.AUDIO), false));
+    }
+
+    @Test
+    public void adFormatsToSet_audio() {
+        assertEquals(
+            EnumSet.of(AdUnitFormat.VIDEO, AdUnitFormat.AUDIO),
+            AdFormat.toSet(EnumSet.of(AdFormat.VAST, AdFormat.AUDIO))
+        );
+    }
 }

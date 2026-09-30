@@ -127,7 +127,11 @@ public class CreativeModelsMakerVast extends CreativeModelsMaker {
 
             videoModel.setName(VIDEO_CREATIVE_TAG);
 
-            videoModel.setMediaUrl(latestVastWrapperParser.getMediaFileUrl(latestVastWrapperParser, 0));
+            boolean isAudio = adConfiguration.isAudioCreative();
+            videoModel.setAudio(isAudio);
+            videoModel.setMediaUrl(isAudio
+                                   ? latestVastWrapperParser.getAudioMediaFileUrl(latestVastWrapperParser, 0)
+                                   : latestVastWrapperParser.getMediaFileUrl(latestVastWrapperParser, 0));
             videoModel.setMediaDuration(Utils.getMsFrom(videoDuration));
             videoModel.setSkipOffset(Utils.getMsFrom(skipOffset));
             videoModel.setAdVerifications(adVerifications);
@@ -161,6 +165,20 @@ public class CreativeModelsMakerVast extends CreativeModelsMaker {
 
             //put click through url into element
             videoModel.setVastClickthroughUrl(vastClickThroughUrl);
+
+            // The creative's details for the app's own UI. Display data only: a VAST it cannot read
+            // must not cost the ad, so a failure here leaves the model without it.
+            try {
+                videoModel.setVastAdInfo(VastAdInfoFactory.from(
+                    rootVastParser,
+                    latestVastWrapperParser,
+                    vastClickThroughUrl,
+                    Utils.getMsFrom(videoDuration),
+                    Utils.getMsFrom(skipOffset)
+                ));
+            } catch (RuntimeException e) {
+                LogUtil.error(TAG, "Unable to read the VAST ad info: " + e.getMessage());
+            }
 
             result.creativeModels = new ArrayList<>();
             result.creativeModels.add(videoModel);

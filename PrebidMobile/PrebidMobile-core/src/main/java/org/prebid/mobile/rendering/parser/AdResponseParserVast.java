@@ -285,6 +285,63 @@ public class AdResponseParserVast extends AdResponseParserBase {
         return myBestMediaFileURL;
     }
 
+    /**
+     * The audio media file to play for an audio creative: of the innermost InLine ad's audio files in
+     * a type the SDK's player handles, the one with the highest bitrate (the first, when none says).
+     * Null when the ad has none.
+     */
+    @Nullable
+    public String getAudioMediaFileUrl(AdResponseParserVast parserVast, int index) {
+        if (parserVast.vast == null || parserVast.vast.getAds() == null || parserVast.vast.getAds().size() <= index) {
+            return null;
+        }
+        Ad ad = parserVast.vast.getAds().get(index);
+        if (ad.getInline() == null || ad.getInline().getCreatives() == null) {
+            return null;
+        }
+        MediaFile best = null;
+        int bestBitrate = -1;
+        for (Creative creative : ad.getInline().getCreatives()) {
+            if (creative.getLinear() == null || creative.getLinear().getMediaFiles() == null) {
+                continue;
+            }
+            for (MediaFile mediaFile : creative.getLinear().getMediaFiles()) {
+                if (!supportedAudioFormat(mediaFile.getType()) || Utils.isBlank(mediaFile.getValue())) {
+                    continue;
+                }
+                int bitrate = parseIntOrZero(mediaFile.getBitrate());
+                if (bitrate > bestBitrate) {
+                    bestBitrate = bitrate;
+                    best = mediaFile;
+                }
+            }
+        }
+        return best == null ? null : best.getValue().trim();
+    }
+
+    @VisibleForTesting
+    static boolean supportedAudioFormat(String type) {
+        if (!TextUtils.isEmpty(type)) {
+            for (String supported : BasicParameterBuilder.SUPPORTED_AUDIO_MIME_TYPES) {
+                if (type.trim().equalsIgnoreCase(supported)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    private static int parseIntOrZero(String value) {
+        if (Utils.isBlank(value)) {
+            return 0;
+        }
+        try {
+            return Integer.parseInt(value.trim());
+        } catch (NumberFormatException e) {
+            return 0;
+        }
+    }
+
     @VisibleForTesting
     static boolean supportedVideoFormat(String type) {
 

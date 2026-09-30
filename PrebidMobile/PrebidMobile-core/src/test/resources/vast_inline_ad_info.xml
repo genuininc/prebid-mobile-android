@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<VAST version="4.0">
+    <Ad id="ad-info-1">
+        <InLine>
+            <AdSystem version="1.0">Genuin Test Server</AdSystem>
+            <AdTitle><![CDATA[ Summer Sale ]]></AdTitle>
+            <Advertiser>Acme Shoes</Advertiser>
+            <Description><![CDATA[Up to 50% off every running shoe.]]></Description>
+            <Impression><![CDATA[https://tracker.test/imp]]></Impression>
+            <Creatives>
+                <Creative id="creative-1">
+                    <Linear skipoffset="00:00:05">
+                        <Duration>00:00:15</Duration>
+                        <MediaFiles>
+                            <MediaFile delivery="progressive" type="video/mp4" width="720" height="1280" bitrate="1200">
+                                <![CDATA[https://cdn.test/portrait.mp4]]>
+                            </MediaFile>
+                            <MediaFile delivery="progressive" type="audio/mpeg" bitrate="128">
+                                <![CDATA[https://cdn.test/sound.mp3]]>
+                            </MediaFile>
+                        </MediaFiles>
+                        <VideoClicks>
+                            <ClickThrough><![CDATA[https://acme.test/sale]]></ClickThrough>
+                            <ClickTracking><![CDATA[https://tracker.test/click]]></ClickTracking>
+                        </VideoClicks>
+                        <Icons>
+                            <Icon program="BrandLogo" width="64" height="64" xPosition="left" yPosition="top">
+                                <StaticResource creativeType="image/png"><![CDATA[https://cdn.test/logo.png]]></StaticResource>
+                                <IconClicks>
+                                    <IconClickThrough><![CDATA[https://acme.test]]></IconClickThrough>
+                                </IconClicks>
+                            </Icon>
+                        </Icons>
+                    </Linear>
+                </Creative>
+                <Creative id="creative-2">
+                    <CompanionAds>
+                        <Companion width="300" height="250">
+                            <StaticResource creativeType="image/jpeg"><![CDATA[https://cdn.test/companion.jpg]]></StaticResource>
+                            <AltText>Shop the sale</AltText>
+                            <CompanionClickThrough><![CDATA[https://acme.test/companion]]></CompanionClickThrough>
+                        </Companion>
+                        <Companion width="728" height="90">
+                            <HTMLResource><![CDATA[<div>html only</div>]]></HTMLResource>
+                        </Companion>
+                    </CompanionAds>
+                </Creative>
+            </Creatives>
+            <Extensions>
+                <Extension type="other"><CtaText>ignored</CtaText></Extension>
+                <Extension type="genuin">
+                    <CtaText><![CDATA[ Shop now ]]></CtaText>
+                    <BrandLogo><![CDATA[https://cdn.test/brand.png]]></BrandLogo>
+                    <BrandColor>#FF5A00</BrandColor>
+                </Extension>
+            </Extensions>
+        </InLine>
+    </Ad>
+</VAST>

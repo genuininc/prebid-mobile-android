@@ -734,4 +734,38 @@ public class BannerViewTest {
         assertEquals(expected, bannerView.getPbAdSlot());
     }
 
+    @Test
+    public void videoControls_DelegateToTheDisplayView() {
+        when(mockDisplayView.isVideoMuted()).thenReturn(true);
+        when(mockDisplayView.getVideoPositionMs()).thenReturn(4_200L);
+        when(mockDisplayView.getVideoDurationMs()).thenReturn(15_000L);
+        when(mockDisplayView.performVideoClick()).thenReturn(true);
+
+        bannerView.pauseVideo();
+        bannerView.resumeVideo();
+        bannerView.setVideoMuted(true);
+
+        verify(mockDisplayView).pauseVideo();
+        verify(mockDisplayView).resumeVideo();
+        verify(mockDisplayView).setVideoMuted(true);
+        assertTrue(bannerView.isVideoMuted());
+        assertEquals(4_200L, bannerView.getVideoPositionMs());
+        assertEquals(15_000L, bannerView.getVideoDurationMs());
+        assertTrue(bannerView.performVideoClick());
+    }
+
+    @Test
+    public void videoControls_WithoutDisplayView_DoNothing() throws IllegalAccessException {
+        WhiteBox.field(BannerView.class, "displayView").set(bannerView, null);
+
+        bannerView.pauseVideo();
+        bannerView.resumeVideo();
+        bannerView.setVideoMuted(true);
+
+        assertFalse(bannerView.isVideoMuted());
+        assertEquals(-1L, bannerView.getVideoPositionMs());
+        assertEquals(-1L, bannerView.getVideoDurationMs());
+        assertFalse(bannerView.performVideoClick());
+        assertNull(bannerView.getVastAdInfo());
+    }
 }

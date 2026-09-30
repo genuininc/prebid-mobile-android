@@ -16,6 +16,8 @@
 
 package org.prebid.mobile.rendering.video;
 
+import static org.mockito.Mockito.never;
+import static org.junit.Assert.assertFalse;
 import android.app.Activity;
 import android.content.Context;
 import android.view.View;
@@ -82,5 +84,29 @@ public class VideoCreativeViewTest {
 
         assertTrue(videoCreativeView.performClick());
         verify(mockCreative).onEvent(VideoAdEvent.Event.AD_CLICK);
+    }
+
+    @Test
+    public void performCallToActionClick_NoClickThrough_FalseAndNoClickReported() {
+        assertFalse(videoCreativeView.performCallToActionClick());
+        verify(mockCreative, never()).onEvent(VideoAdEvent.Event.AD_CLICK);
+    }
+
+    @Test
+    public void performCallToActionClick_WithClickThrough_ReportsTheClick() {
+        videoCreativeView.setCallToActionUrl("https://acme.test/sale");
+
+        assertTrue(videoCreativeView.performCallToActionClick());
+        verify(mockCreative).onEvent(VideoAdEvent.Event.AD_CLICK);
+    }
+
+    @Test
+    public void isMuted_FollowsMuteAndUnmute() throws IllegalAccessException {
+        WhiteBox.field(VideoCreativeView.class, "exoPlayerView").set(videoCreativeView, mock(ExoPlayerView.class));
+
+        videoCreativeView.mute();
+        assertTrue(videoCreativeView.isMuted());
+        videoCreativeView.unMute();
+        assertFalse(videoCreativeView.isMuted());
     }
 }

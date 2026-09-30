@@ -22,6 +22,7 @@ import android.widget.FrameLayout;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import org.prebid.mobile.LogUtil;
+import org.prebid.mobile.api.data.VastAdInfo;
 import org.prebid.mobile.api.exceptions.AdException;
 import org.prebid.mobile.configuration.AdUnitConfiguration;
 import org.prebid.mobile.rendering.bidding.data.bid.BidResponse;
@@ -103,6 +104,61 @@ public class DisplayView extends FrameLayout {
      */
     public boolean isVideoPlaying() {
         return adView instanceof PrebidDisplayView && ((PrebidDisplayView) adView).isVideoPlaying();
+    }
+
+    @Nullable
+    private PrebidDisplayView prebidView() {
+        return adView instanceof PrebidDisplayView ? (PrebidDisplayView) adView : null;
+    }
+
+    public void pauseVideo() {
+        PrebidDisplayView view = prebidView();
+        if (view != null) {
+            view.pauseVideo();
+        }
+    }
+
+    public void resumeVideo() {
+        PrebidDisplayView view = prebidView();
+        if (view != null) {
+            view.resumeVideo();
+        }
+    }
+
+    public void setVideoMuted(boolean muted) {
+        PrebidDisplayView view = prebidView();
+        if (view != null) {
+            view.setVideoMuted(muted);
+        }
+    }
+
+    public boolean isVideoMuted() {
+        PrebidDisplayView view = prebidView();
+        return view != null && view.isVideoMuted();
+    }
+
+    public long getVideoPositionMs() {
+        PrebidDisplayView view = prebidView();
+        return view == null ? -1 : view.getVideoPositionMs();
+    }
+
+    public long getVideoDurationMs() {
+        PrebidDisplayView view = prebidView();
+        return view == null ? -1 : view.getVideoDurationMs();
+    }
+
+    public boolean performVideoClick() {
+        PrebidDisplayView view = prebidView();
+        return view != null && view.performVideoClick();
+    }
+
+    /**
+     * The video creative's {@link VastAdInfo}, or null when the ad is not a VAST video rendered by
+     * Prebid's own renderer.
+     */
+    @Nullable
+    public VastAdInfo getVastAdInfo() {
+        return adView instanceof PrebidDisplayView ? ((PrebidDisplayView) adView).getVastAdInfo() : null;
     }
 
     public void destroy() {

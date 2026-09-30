@@ -170,6 +170,35 @@ public class VideoCreativeView extends RelativeLayout {
         return exoPlayerView.isPlaying();
     }
 
+    /** Whether the video is muted — by the viewer, the app, or the ad's own start-muted setting. */
+    public boolean isMuted() {
+        return isMuted;
+    }
+
+    /** Where the video is, in ms, or -1 when there is no player. */
+    public long getPlaybackPositionMs() {
+        return exoPlayerView.getCurrentPosition();
+    }
+
+    /** The media's duration from the player, in ms, or -1 while it is unknown. */
+    public long getPlaybackDurationMs() {
+        return exoPlayerView.getDuration();
+    }
+
+    /**
+     * Handles a tap on the ad as if the viewer tapped the video: opens the click-through and reports
+     * the click, which fires the VAST click trackers.
+     *
+     * @return false when there is no click-through to open
+     */
+    public boolean performCallToActionClick() {
+        if (callToActionUrl == null || callToActionUrl.isEmpty()) {
+            return false;
+        }
+        handleCallToActionClick();
+        return true;
+    }
+
     public boolean hasVideoStarted() {
         return exoPlayerView.getCurrentPosition() != -1;
     }

@@ -1,5 +1,6 @@
 package org.prebid.mobile.configuration;
 
+import org.prebid.mobile.AudioParameters;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -182,6 +183,8 @@ public class AdUnitConfigurationTest {
         subject.setAutoRefreshDelay(30);
         subject.setRewarded(true);
         subject.setBuiltInVideo(true);
+        subject.setAudioCreative(true);
+        subject.setAudioParameters(new AudioParameters());
         subject.setImpOrtbConfig("{\"a\":1}");
         subject.addSize(new AdSize(300, 250));
 
@@ -193,6 +196,8 @@ public class AdUnitConfigurationTest {
         assertEquals(subject.getAutoRefreshDelay(), copy.getAutoRefreshDelay());
         assertEquals(subject.isRewarded(), copy.isRewarded());
         assertEquals(subject.isBuiltInVideo(), copy.isBuiltInVideo());
+        assertEquals(subject.isAudioCreative(), copy.isAudioCreative());
+        assertEquals(subject.getAudioParameters(), copy.getAudioParameters());
         assertEquals(subject.getImpOrtbConfig(), copy.getImpOrtbConfig());
         assertEquals(subject.getSizes(), copy.getSizes());
     }
@@ -236,7 +241,8 @@ public class AdUnitConfigurationTest {
                 "configId", "pbAdSlot", "interstitialSize", "impressionUrl", "fingerprint", "gpid",
                 "impOrtbConfig", "globalOrtbConfig", "closeButtonPosition", "skipButtonPosition",
                 "minSizePercentage", "placementType", "adPosition", "appContent", "bannerParameters",
-                "videoParameters", "nativeConfiguration", "rewardManager", "adFormats", "adSizes"
+                "videoParameters", "audioParameters", "isAudioCreative", "nativeConfiguration", "rewardManager",
+                "adFormats", "adSizes"
         ));
 
         Set<String> actual = new HashSet<>();

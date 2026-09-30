@@ -336,7 +336,7 @@ public abstract class AdUnit {
         if (response == null || response.getWinningBid() == null || response.getWinningBid().getBurl() == null) {
             return;
         }
-        if (response.isVideo()) {
+        if (response.isVast()) {
             LogUtil.debug(TAG, "VisibilityTracker ignored due to the video ad");
             return;
         }

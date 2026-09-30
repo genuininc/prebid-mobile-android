@@ -21,9 +21,11 @@ import android.util.Log;
 import android.view.View;
 import android.widget.FrameLayout;
 
+import androidx.annotation.Nullable;
 import androidx.core.content.ContextCompat;
 
 import org.prebid.mobile.LogUtil;
+import org.prebid.mobile.api.data.VastAdInfo;
 import org.prebid.mobile.api.exceptions.AdException;
 import org.prebid.mobile.configuration.AdUnitConfiguration;
 import org.prebid.mobile.rendering.bidding.data.bid.BidResponse;
@@ -176,6 +178,31 @@ public class VideoView extends BaseAdView {
         } else {
             adViewManager.unmute();
         }
+    }
+
+    public boolean isMuted() {
+        return adViewManager != null && adViewManager.isMuted();
+    }
+
+    /** Where the video is, in ms, or -1 when nothing is loaded. */
+    public long getVideoPositionMs() {
+        return adViewManager == null ? -1 : adViewManager.getPlaybackPositionMs();
+    }
+
+    /** The video's duration, in ms, or -1 while it is unknown. */
+    public long getVideoDurationMs() {
+        return adViewManager == null ? -1 : adViewManager.getPlaybackDurationMs();
+    }
+
+    /** Handles a tap on the video as the viewer's own; false when it has no click-through. */
+    public boolean performAdClick() {
+        return adViewManager != null && adViewManager.performClick();
+    }
+
+    /** The loaded video's {@link VastAdInfo}, or null before it loads; see {@link AdViewManager#getVastAdInfo()}. */
+    @Nullable
+    public VastAdInfo getVastAdInfo() {
+        return adViewManager == null ? null : adViewManager.getVastAdInfo();
     }
 
     public void setVideoViewListener(VideoViewListener listener) {

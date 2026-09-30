@@ -52,6 +52,9 @@ public class VideoCreative extends VideoCreativeProtocol
 
     @VisibleForTesting VideoCreativeView videoCreativeView;
 
+    /** An audio creative's impression, fired once when its playback starts. */
+    private boolean audioImpressionTracked;
+
     private AsyncTask videoDownloadTask;
 
     private String preloadedVideoFilePath;
@@ -97,7 +100,11 @@ public class VideoCreative extends VideoCreativeProtocol
             setStartIsMutedValue(model.getAdConfiguration().isMuted());
 
             model.trackPlayerStateChange(InternalPlayerState.NORMAL);
-            startViewabilityTracker();
+            // An audio ad has nothing to watch, so its view's visibility says nothing about whether
+            // it was heard: its impression counts when playback starts instead (see onEvent).
+            if (!model.isAudio()) {
+                startViewabilityTracker();
+            }
         }
     }
 
@@ -129,6 +136,11 @@ public class VideoCreative extends VideoCreativeProtocol
     @Override
     public void onEvent(VideoAdEvent.Event trackingEvent) {
         model.trackVideoEvent(trackingEvent);
+
+        if (trackingEvent == VideoAdEvent.Event.AD_START && model.isAudio() && !audioImpressionTracked) {
+            audioImpressionTracked = true;
+            model.trackVideoEvent(VideoAdEvent.Event.AD_IMPRESSION);
+        }
 
         notifyCreativeViewListener(trackingEvent);
     }
@@ -201,6 +213,28 @@ public class VideoCreative extends VideoCreativeProtocol
         if (videoCreativeView != null) {
             videoCreativeView.mute();
         }
+    }
+
+    @Override
+    public boolean isMuted() {
+        return videoCreativeView != null && videoCreativeView.isMuted();
+    }
+
+    @Override
+    public long getPlaybackPositionMs() {
+        return videoCreativeView == null ? -1 : videoCreativeView.getPlaybackPositionMs();
+    }
+
+    /** The player's duration while it knows one, else the VAST's. */
+    @Override
+    public long getPlaybackDurationMs() {
+        long fromPlayer = videoCreativeView == null ? -1 : videoCreativeView.getPlaybackDurationMs();
+        return fromPlayer > 0 ? fromPlayer : getMediaDuration();
+    }
+
+    @Override
+    public boolean performClick() {
+        return videoCreativeView != null && videoCreativeView.performCallToActionClick();
     }
 
     @Override

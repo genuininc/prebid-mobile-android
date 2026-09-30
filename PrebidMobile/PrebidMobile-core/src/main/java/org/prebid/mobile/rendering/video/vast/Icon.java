@@ -131,4 +131,12 @@ public class Icon extends VASTParserBase {
     public String getApiFramework() {
         return apiFramework;
     }
+
+    public StaticResource getStaticResource() {
+        return staticResource;
+    }
+
+    public IconClicks getIconClicks() {
+        return iconClicks;
+    }
 }

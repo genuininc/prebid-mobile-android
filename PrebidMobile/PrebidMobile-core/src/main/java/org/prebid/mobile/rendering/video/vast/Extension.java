@@ -26,8 +26,20 @@ public class Extension extends VASTParserBase {
 	private String type;
 	private AdVerifications adVerifications;
 
+	// Genuin's own creative details, read only from an <Extension type="genuin">: what VAST has no
+	// element for but an ad UI needs — the CTA button's label and the advertiser's brand.
+	private String ctaText;
+	private String brandLogoUrl;
+	private String brandColor;
+
 	private final static String VAST_AD_VERIFICATIONS = "AdVerifications";
 	private final static String VAST_EXTENSION = "Extension";
+
+	/** The `type` of the extension that carries Genuin's creative details. */
+	public final static String TYPE_GENUIN = "genuin";
+	private final static String GENUIN_CTA_TEXT = "CtaText";
+	private final static String GENUIN_BRAND_LOGO = "BrandLogo";
+	private final static String GENUIN_BRAND_COLOR = "BrandColor";
 
 	public Extension(XmlPullParser p) throws XmlPullParserException, IOException {
 		type = p.getAttributeValue(null, "type");
@@ -44,6 +56,12 @@ public class Extension extends VASTParserBase {
 				p.require(XmlPullParser.START_TAG, null, VAST_AD_VERIFICATIONS);
 				adVerifications = new AdVerifications(p);
 				p.require(XmlPullParser.END_TAG, null, VAST_AD_VERIFICATIONS);
+			} else if (isGenuin() && GENUIN_CTA_TEXT.equals(name)) {
+				ctaText = readTrimmedText(p);
+			} else if (isGenuin() && GENUIN_BRAND_LOGO.equals(name)) {
+				brandLogoUrl = readTrimmedText(p);
+			} else if (isGenuin() && GENUIN_BRAND_COLOR.equals(name)) {
+				brandColor = readTrimmedText(p);
 			} else {
 				skip(p);
 			}
@@ -57,4 +75,34 @@ public class Extension extends VASTParserBase {
     public AdVerifications getAdVerifications() {
 		return adVerifications;
     }
+
+	/** Whether this is the extension carrying Genuin's creative details. */
+	public boolean isGenuin() {
+		return TYPE_GENUIN.equalsIgnoreCase(type);
+	}
+
+	/** The CTA button's label, from a Genuin extension; null when absent. */
+	public String getCtaText() {
+		return ctaText;
+	}
+
+	/** The advertiser's brand logo URL, from a Genuin extension; null when absent. */
+	public String getBrandLogoUrl() {
+		return brandLogoUrl;
+	}
+
+	/** The advertiser's brand colour (e.g. `#FF5A00`), from a Genuin extension; null when absent. */
+	public String getBrandColor() {
+		return brandColor;
+	}
+
+	/** The element's text, trimmed (CDATA included), or null when it is empty. */
+	private String readTrimmedText(XmlPullParser p) throws IOException, XmlPullParserException {
+		String text = readText(p);
+		if (text == null) {
+			return null;
+		}
+		String trimmed = text.trim();
+		return trimmed.isEmpty() ? null : trimmed;
+	}
 }

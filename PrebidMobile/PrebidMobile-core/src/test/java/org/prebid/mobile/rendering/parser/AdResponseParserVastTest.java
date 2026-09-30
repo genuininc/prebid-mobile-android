@@ -905,4 +905,28 @@ public class AdResponseParserVastTest {
         when(mockInLine.getCreatives()).thenReturn(creatives);
         return mockInLine;
     }
+
+    @Test
+    public void getAudioMediaFileUrl_PicksTheHighestBitrateSupportedAudioFile() throws Exception {
+        AdResponseParserVast parser = new AdResponseParserVast(ResourceUtils.convertResourceToString("vast_inline_audio.xml"));
+
+        assertEquals("https://cdn.test/high.mp3", parser.getAudioMediaFileUrl(parser, 0));
+    }
+
+    @Test
+    public void getAudioMediaFileUrl_VideoOnlyAd_Null() throws Exception {
+        AdResponseParserVast parser = new AdResponseParserVast(ResourceUtils.convertResourceToString("vast_inline_minimal.xml"));
+
+        assertNull(parser.getAudioMediaFileUrl(parser, 0));
+    }
+
+    @Test
+    public void supportedAudioFormat_OnlyWhatThePlayerPlays() {
+        assertTrue(AdResponseParserVast.supportedAudioFormat("audio/mp4"));
+        assertTrue(AdResponseParserVast.supportedAudioFormat("AUDIO/MPEG"));
+        assertTrue(AdResponseParserVast.supportedAudioFormat("audio/aac"));
+        assertFalse(AdResponseParserVast.supportedAudioFormat("audio/ogg"));
+        assertFalse(AdResponseParserVast.supportedAudioFormat("video/mp4"));
+        assertFalse(AdResponseParserVast.supportedAudioFormat(null));
+    }
 }

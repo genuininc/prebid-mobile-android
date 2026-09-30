@@ -22,4 +22,9 @@ package org.prebid.mobile.api.data;
 public enum AdUnitFormat {
     BANNER,
     VIDEO,
+    /**
+     * An audio ad: the imp carries an OpenRTB {@code audio} object, and the VAST it wins is played by
+     * the SDK's own player, trackers and all — see {@link org.prebid.mobile.AudioParameters}.
+     */
+    AUDIO,
 }

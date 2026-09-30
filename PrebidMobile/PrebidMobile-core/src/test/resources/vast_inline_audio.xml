@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<VAST version="4.0">
+    <Ad id="audio-1">
+        <InLine>
+            <AdSystem>Genuin Test Server</AdSystem>
+            <AdTitle>Audio sale</AdTitle>
+            <Impression><![CDATA[https://tracker.test/imp]]></Impression>
+            <Creatives>
+                <Creative id="audio-creative">
+                    <Linear>
+                        <Duration>00:00:15</Duration>
+                        <MediaFiles>
+                            <MediaFile delivery="progressive" type="audio/mp4" bitrate="64"><![CDATA[https://cdn.test/low.m4a]]></MediaFile>
+                            <MediaFile delivery="progressive" type="audio/mpeg" bitrate="128"><![CDATA[https://cdn.test/high.mp3]]></MediaFile>
+                            <MediaFile delivery="progressive" type="audio/ogg" bitrate="256"><![CDATA[https://cdn.test/unsupported.ogg]]></MediaFile>
+                            <MediaFile delivery="progressive" type="video/mp4" width="720" height="1280"><![CDATA[https://cdn.test/video.mp4]]></MediaFile>
+                        </MediaFiles>
+                        <VideoClicks>
+                            <ClickThrough><![CDATA[https://acme.test/audio]]></ClickThrough>
+                        </VideoClicks>
+                    </Linear>
+                </Creative>
+            </Creatives>
+        </InLine>
+    </Ad>
+</VAST>

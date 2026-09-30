@@ -11,7 +11,9 @@ public enum AdFormat {
     BANNER,
     INTERSTITIAL,
     NATIVE,
-    VAST;
+    VAST,
+    /** An audio imp. Its winning VAST is rendered by the same pipeline as {@link #VAST}. */
+    AUDIO;
 
     public static EnumSet<AdFormat> fromSet(
             EnumSet<AdUnitFormat> adUnitFormats,
@@ -32,6 +34,9 @@ public enum AdFormat {
             if (format == AdUnitFormat.VIDEO) {
                 result.add(AdFormat.VAST);
             }
+            if (format == AdUnitFormat.AUDIO) {
+                result.add(AdFormat.AUDIO);
+            }
         }
         return result;
     }
@@ -39,7 +44,7 @@ public enum AdFormat {
     /**
      * Maps internal ad formats back to the public {@link AdUnitFormat} values.
      * {@link #BANNER} and {@link #INTERSTITIAL} both map to {@link AdUnitFormat#BANNER},
-     * {@link #VAST} maps to {@link AdUnitFormat#VIDEO}. {@link #NATIVE} has no public
+     * {@link #VAST} maps to {@link AdUnitFormat#VIDEO}, {@link #AUDIO} to {@link AdUnitFormat#AUDIO}. {@link #NATIVE} has no public
      * counterpart and is skipped.
      */
     public static EnumSet<AdUnitFormat> toSet(@Nullable EnumSet<AdFormat> adFormats) {
@@ -52,6 +57,9 @@ public enum AdFormat {
             }
             if (format == AdFormat.VAST) {
                 result.add(AdUnitFormat.VIDEO);
+            }
+            if (format == AdFormat.AUDIO) {
+                result.add(AdUnitFormat.AUDIO);
             }
         }
         return result;

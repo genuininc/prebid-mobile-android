@@ -88,11 +88,19 @@ public class CreativeModelMakerBids {
 
         viewableUrl = winningBid.getBurl();
 
-        if (bidResponse.isVideo()) {
+        if (bidResponse.isVast()) {
+            // A bid that does not say it is audio still is one when audio is all the ad unit asked for.
+            adConfiguration.setAudioCreative(
+                bidResponse.isAudio() || isAudioOnly(adConfiguration)
+            );
             makeVideoModels(adConfiguration, winningBid.getAdm());
         } else {
             parseAcj(adConfiguration, bidResponse);
         }
+    }
+
+    private static boolean isAudioOnly(AdUnitConfiguration adConfiguration) {
+        return adConfiguration.isAdType(AdFormat.AUDIO) && !adConfiguration.isAdType(AdFormat.VAST);
     }
 
     public void makeVideoModels(AdUnitConfiguration adConfiguration, String vast) {

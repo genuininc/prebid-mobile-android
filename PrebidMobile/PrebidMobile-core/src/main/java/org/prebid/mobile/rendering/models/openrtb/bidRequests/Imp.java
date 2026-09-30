@@ -18,6 +18,7 @@ package org.prebid.mobile.rendering.models.openrtb.bidRequests;
 
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.prebid.mobile.rendering.models.openrtb.bidRequests.imps.Audio;
 import org.prebid.mobile.rendering.models.openrtb.bidRequests.imps.Banner;
 import org.prebid.mobile.rendering.models.openrtb.bidRequests.imps.Pmp;
 import org.prebid.mobile.rendering.models.openrtb.bidRequests.imps.Video;
@@ -32,6 +33,7 @@ public class Imp extends BaseBid {
     public Integer secure = null;
     public Banner banner = null;
     public Video video = null;
+    public Audio audio = null;
     public Pmp pmp = null;
     public Native nativeObj;
     private Ext ext = null;
@@ -54,6 +56,7 @@ public class Imp extends BaseBid {
 
         toJSON(jsonObject, "banner", (banner != null) ? banner.getJsonObject() : null);
         toJSON(jsonObject, "video", (video != null) ? video.getJsonObject() : null);
+        toJSON(jsonObject, "audio", (audio != null) ? audio.getJsonObject() : null);
         toJSON(jsonObject, "native", (nativeObj != null) ? nativeObj.getJsonObject() : null);
         toJSON(jsonObject, "pmp", (pmp != null) ? pmp.getJsonObject() : null);
         toJSON(jsonObject, "ext", (ext != null) ? ext.getJsonObject() : null);

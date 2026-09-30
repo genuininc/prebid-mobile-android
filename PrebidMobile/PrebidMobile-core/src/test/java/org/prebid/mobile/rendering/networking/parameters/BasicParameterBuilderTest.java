@@ -16,6 +16,7 @@
 
 package org.prebid.mobile.rendering.networking.parameters;
 
+import org.prebid.mobile.AudioParameters;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -75,6 +76,7 @@ import org.prebid.mobile.rendering.sdk.ManagersResolver;
 import org.prebid.mobile.rendering.session.manager.OmAdSessionManager;
 import org.prebid.mobile.rendering.utils.helpers.Utils;
 import org.prebid.mobile.rendering.video.vast.Ad;
+import org.prebid.mobile.test.utils.ResourceUtils;
 import org.prebid.mobile.testutils.FakePrebidMobilePluginRenderer;
 import org.robolectric.Robolectric;
 import org.robolectric.RobolectricTestRunner;
@@ -1588,4 +1590,60 @@ public class BasicParameterBuilderTest {
         assertEquals(-122.0f, adRequestInput.getBidRequest().getUser().getGeo().lon, 0.0f);
     }
 
+    private static AdUnitConfiguration audioConfig() {
+        AdUnitConfiguration config = new AdUnitConfiguration();
+        config.setConfigId("audio-config");
+        config.setAdUnitFormats(EnumSet.of(AdUnitFormat.AUDIO), false);
+        return config;
+    }
+
+    @Test
+    public void audioAdUnit_WithoutParameters_SendsTheSdksOwnAudioImp() throws Exception {
+        Imp imp = configIntoBidRequest(audioConfig()).getImp().get(0);
+
+        assertNull(imp.banner);
+        assertNull(imp.video);
+        assertNotNull(imp.audio);
+        ResourceUtils.assertJsonEquals(
+            new JSONObject("{\"mimes\":[\"audio/mp4\",\"audio/mpeg\",\"audio/aac\"],\"protocols\":[2,3,5,6,7,8],\"delivery\":[3]}"),
+            imp.audio.getJsonObject()
+        );
+        // Like video, the imp does not insist on https media.
+        assertNull(imp.secure);
+    }
+
+    @Test
+    public void audioAdUnit_WithParameters_SendsThem() throws Exception {
+        AdUnitConfiguration config = audioConfig();
+        AudioParameters parameters = new AudioParameters(Lists.newArrayList("audio/mpeg"));
+        parameters.setMinDuration(5);
+        parameters.setMaxDuration(30);
+        parameters.setMaxBitrate(256);
+        parameters.setProtocols(Lists.newArrayList(Signals.Protocols.VAST_3_0));
+        parameters.setStartDelay(Signals.StartDelay.PreRoll);
+        config.setAudioParameters(parameters);
+
+        Imp imp = configIntoBidRequest(config).getImp().get(0);
+
+        ResourceUtils.assertJsonEquals(
+            new JSONObject("{\"mimes\":[\"audio/mpeg\"],\"minduration\":5,\"maxduration\":30,\"protocols\":[3]," +
+                "\"startdelay\":0,\"maxbitrate\":256,\"delivery\":[3]}"),
+            imp.audio.getJsonObject()
+        );
+    }
+
+    @Test
+    public void audioAdUnit_WhenCaching_AsksPrebidServerToCacheTheVast() throws Exception {
+        PrebidMobile.setUseCacheForReportingWithRenderingApi(true);
+        try {
+            JSONObject prebidExt = configIntoBidRequest(audioConfig())
+                .getJsonObject()
+                .getJSONObject("ext")
+                .getJSONObject("prebid");
+
+            assertTrue(prebidExt.getJSONObject("cache").has("vastxml"));
+        } finally {
+            PrebidMobile.setUseCacheForReportingWithRenderingApi(false);
+        }
+    }
 }

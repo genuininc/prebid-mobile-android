@@ -16,6 +16,7 @@
 
 package org.prebid.mobile.rendering.video;
 
+import androidx.media3.common.C;
 import android.app.Activity;
 import android.content.Context;
 import android.net.Uri;
@@ -192,5 +193,26 @@ public class ExoPlayerViewTest {
         exoPlayerView.resume();
 
         verifyNoInteractions(mockExoPlayer);
+    }
+
+    @Test
+    public void getDuration_ReleasedPlayer_MinusOneInsteadOfThrowing() throws Exception {
+        WhiteBox.field(ExoPlayerView.class, "player").set(exoPlayerView, null);
+
+        assertEquals(-1, exoPlayerView.getDuration());
+    }
+
+    @Test
+    public void getDuration_NotYetKnown_MinusOne() {
+        when(mockExoPlayer.getDuration()).thenReturn(C.TIME_UNSET);
+
+        assertEquals(-1, exoPlayerView.getDuration());
+    }
+
+    @Test
+    public void getDuration_Known_PlayersDuration() {
+        when(mockExoPlayer.getDuration()).thenReturn(15_000L);
+
+        assertEquals(15_000, exoPlayerView.getDuration());
     }
 }

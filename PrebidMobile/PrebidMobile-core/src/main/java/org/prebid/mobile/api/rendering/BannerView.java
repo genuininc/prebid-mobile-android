@@ -28,11 +28,13 @@ import android.widget.FrameLayout;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
+import org.prebid.mobile.AudioParameters;
 import org.prebid.mobile.AdSize;
 import org.prebid.mobile.LogUtil;
 import org.prebid.mobile.PrebidMobile;
 import org.prebid.mobile.api.data.AdFormat;
 import org.prebid.mobile.api.data.AdUnitFormat;
+import org.prebid.mobile.api.data.VastAdInfo;
 import org.prebid.mobile.api.data.VideoPlacementType;
 import org.prebid.mobile.api.exceptions.AdException;
 import org.prebid.mobile.api.rendering.listeners.BannerVideoListener;
@@ -430,6 +432,9 @@ public class BannerView extends FrameLayout {
      * <p>
      * Defaults to {@link AdUnitFormat#BANNER}. Pass {@link AdUnitFormat#VIDEO} for an outstream
      * video banner, or both values to let display and video demand compete on the same impression.
+     * Pass {@link AdUnitFormat#AUDIO} for an audio ad: the SDK's player plays it and fires its
+     * trackers, the view shows no picture, and the app draws its own UI from {@link #getVastAdInfo()}
+     * and the video playback controls.
      * <p>
      * A null or empty set is ignored and the current value is kept.
      * <p>
@@ -449,6 +454,20 @@ public class BannerView extends FrameLayout {
     @NonNull
     public EnumSet<AdUnitFormat> getAdUnitFormats() {
         return adUnitConfig.getAdUnitFormats();
+    }
+
+    /**
+     * The {@code imp.audio} parameters sent when {@link AdUnitFormat#AUDIO} is among the ad unit's
+     * formats. Optional: without them the SDK asks for the audio types and VAST versions its own
+     * player handles.
+     */
+    public void setAudioParameters(@Nullable AudioParameters audioParameters) {
+        adUnitConfig.setAudioParameters(audioParameters);
+    }
+
+    @Nullable
+    public AudioParameters getAudioParameters() {
+        return adUnitConfig.getAudioParameters();
     }
 
     /**
@@ -585,9 +604,66 @@ public class BannerView extends FrameLayout {
     /**
      * True while a Prebid video creative deployed by this view is playing.
      */
-    @VisibleForTesting
-    boolean isVideoPlaying() {
+    public boolean isVideoPlaying() {
         return displayView != null && displayView.isVideoPlaying();
+    }
+
+    // ---------------------------------------------------------------------------------------------
+    // Video playback controls, for an app that draws its own controls over the video. Each one acts
+    // only on a VAST video rendered by Prebid's own renderer, and does nothing (or answers -1 / false)
+    // otherwise. Call them on the main thread. The state changes they cause are still reported
+    // through the BannerVideoListener (onVideoPaused, onVideoMuted, ...), and the VAST trackers for
+    // them still fire, exactly as if the viewer had used Prebid's own controls.
+    // ---------------------------------------------------------------------------------------------
+
+    /** Pauses the video. It stays paused until {@link #resumeVideo()}, whatever its visibility does. */
+    public void pauseVideo() {
+        if (displayView != null) {
+            displayView.pauseVideo();
+        }
+    }
+
+    /** Resumes a video paused with {@link #pauseVideo()}, from where it was. */
+    public void resumeVideo() {
+        if (displayView != null) {
+            displayView.resumeVideo();
+        }
+    }
+
+    /** Mutes or unmutes the video. */
+    public void setVideoMuted(boolean muted) {
+        if (displayView != null) {
+            displayView.setVideoMuted(muted);
+        }
+    }
+
+    /** Whether the video is muted, by the viewer, the app or the ad's own start-muted setting. */
+    public boolean isVideoMuted() {
+        return displayView != null && displayView.isVideoMuted();
+    }
+
+    /**
+     * Where the video is, in ms, or -1 when there is no video. Cheap enough to read every frame, which
+     * is how an app's own countdown or progress bar should follow it.
+     */
+    public long getVideoPositionMs() {
+        return displayView == null ? -1 : displayView.getVideoPositionMs();
+    }
+
+    /** The video's duration, in ms — the player's once it knows it, the VAST's before — or -1. */
+    public long getVideoDurationMs() {
+        return displayView == null ? -1 : displayView.getVideoDurationMs();
+    }
+
+    /**
+     * Handles a tap on the app's own call-to-action as the viewer's tap on the video: opens the
+     * click-through ({@link VastAdInfo#getClickThroughUrl()}) and fires the VAST click trackers. An
+     * app that opens the link itself would lose the click tracking.
+     *
+     * @return false when there is no video, or it has no click-through
+     */
+    public boolean performVideoClick() {
+        return displayView != null && displayView.performVideoClick();
     }
 
     private void markPrimaryAdRequestFinished() {
@@ -670,6 +746,18 @@ public class BannerView extends FrameLayout {
 
     public BidResponse getBidResponse() {
         return bidResponse;
+    }
+
+    /**
+     * What the loaded video creative's VAST says about itself — title, advertiser, description, the
+     * click-through (CTA) link, media, companion images and icons — for an app that draws its own UI
+     * around the ad. Null until the ad has loaded, and for an ad that is not a VAST video.
+     * <p>
+     * The bid's advertiser domains are on {@link #getBidResponse()}.
+     */
+    @Nullable
+    public VastAdInfo getVastAdInfo() {
+        return displayView == null ? null : displayView.getVastAdInfo();
     }
 
     @Nullable

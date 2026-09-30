@@ -21,6 +21,7 @@ import android.net.Uri;
 import android.widget.RelativeLayout;
 import androidx.annotation.NonNull;
 import androidx.annotation.VisibleForTesting;
+import androidx.media3.common.C;
 import androidx.media3.common.MediaItem;
 import androidx.media3.common.PlaybackException;
 import androidx.media3.common.Player;
@@ -126,9 +127,17 @@ public class ExoPlayerView extends PlayerView implements VideoPlayerView {
         videoUri = uri;
     }
 
+    /**
+     * The media's duration in ms, or -1 while it is unknown: before the player has prepared, and after
+     * it is released — which happens as a video ends, before the completion is reported.
+     */
     @Override
     public int getDuration() {
-        return (int) player.getDuration();
+        if (player == null) {
+            return -1;
+        }
+        long duration = player.getDuration();
+        return duration == C.TIME_UNSET ? -1 : (int) duration;
     }
 
     @Override

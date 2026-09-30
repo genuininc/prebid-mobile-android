@@ -16,6 +16,8 @@
 
 package org.prebid.mobile.rendering.video;
 
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 import android.app.Activity;
 import android.content.Context;
 import org.junit.After;
@@ -321,4 +323,63 @@ public class VideoCreativeTest {
         verify(videoCreative, never()).mute();
     }
 
+    @Test
+    public void playbackAccessors_DelegateToTheCreativeView() {
+        when(mockVideoCreativeView.isMuted()).thenReturn(true);
+        when(mockVideoCreativeView.getPlaybackPositionMs()).thenReturn(4_200L);
+        when(mockVideoCreativeView.getPlaybackDurationMs()).thenReturn(15_000L);
+        when(mockVideoCreativeView.performCallToActionClick()).thenReturn(true);
+
+        assertTrue(videoCreative.isMuted());
+        assertEquals(4_200L, videoCreative.getPlaybackPositionMs());
+        assertEquals(15_000L, videoCreative.getPlaybackDurationMs());
+        assertTrue(videoCreative.performClick());
+    }
+
+    @Test
+    public void getPlaybackDurationMs_PlayerNotKnowingIt_FallsBackToTheVastDuration() {
+        when(mockVideoCreativeView.getPlaybackDurationMs()).thenReturn(-1L);
+        when(mockModel.getMediaDuration()).thenReturn(15_000L);
+
+        assertEquals(15_000L, videoCreative.getPlaybackDurationMs());
+    }
+
+    @Test
+    public void playbackAccessors_NoCreativeView_Defaults() {
+        videoCreative.videoCreativeView = null;
+
+        assertFalse(videoCreative.isMuted());
+        assertEquals(-1L, videoCreative.getPlaybackPositionMs());
+        assertFalse(videoCreative.performClick());
+    }
+
+    @Test
+    public void audioCreative_ImpressionOnceWhenPlaybackStarts() {
+        when(mockModel.isAudio()).thenReturn(true);
+
+        videoCreative.onEvent(VideoAdEvent.Event.AD_START);
+        videoCreative.onEvent(VideoAdEvent.Event.AD_START);
+
+        verify(mockModel, times(1)).trackVideoEvent(VideoAdEvent.Event.AD_IMPRESSION);
+    }
+
+    @Test
+    public void videoCreative_StartDoesNotCountAsTheImpression() {
+        when(mockModel.isAudio()).thenReturn(false);
+
+        videoCreative.onEvent(VideoAdEvent.Event.AD_START);
+
+        verify(mockModel, never()).trackVideoEvent(VideoAdEvent.Event.AD_IMPRESSION);
+    }
+
+    @Test
+    public void audioCreative_DisplayDoesNotWaitForVisibility() {
+        when(mockModel.isAudio()).thenReturn(true);
+        when(mockModel.getAdConfiguration()).thenReturn(new AdUnitConfiguration());
+        VideoCreative spyVideoCreative = spy(videoCreative);
+
+        spyVideoCreative.display();
+
+        verify(spyVideoCreative, never()).startViewabilityTracker();
+    }
 }

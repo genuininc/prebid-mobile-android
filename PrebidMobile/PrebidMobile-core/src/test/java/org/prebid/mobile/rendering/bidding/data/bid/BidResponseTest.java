@@ -397,4 +397,37 @@ public class BidResponseTest {
         return response.toString();
     }
 
+    private static BidResponse winningBidOfType(String type) {
+        String typeJson = type == null ? "" : "\"type\":\"" + type + "\",";
+        String json = "{\"id\":\"id\",\"seatbid\":[{\"bid\":[{\"id\":\"b\",\"impid\":\"i\",\"price\":1," +
+            "\"adm\":\"<VAST version=\\\"3.0\\\"></VAST>\"," +
+            "\"ext\":{\"prebid\":{" + typeJson + "\"targeting\":{\"hb_pb\":\"1.00\",\"hb_bidder\":\"x\"}}}}]}]}";
+        return new BidResponse(json, new AdUnitConfiguration());
+    }
+
+    @Test
+    public void audioBid_IsAudioAndVastButNotVideo() {
+        BidResponse response = winningBidOfType("audio");
+
+        assertTrue(response.isAudio());
+        assertFalse(response.isVideo());
+        assertTrue(response.isVast());
+    }
+
+    @Test
+    public void videoBid_IsVideoAndVastButNotAudio() {
+        BidResponse response = winningBidOfType("video");
+
+        assertFalse(response.isAudio());
+        assertTrue(response.isVideo());
+        assertTrue(response.isVast());
+    }
+
+    @Test
+    public void bannerBid_IsNotVast() {
+        BidResponse response = winningBidOfType("banner");
+
+        assertFalse(response.isAudio());
+        assertFalse(response.isVast());
+    }
 }

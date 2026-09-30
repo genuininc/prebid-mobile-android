@@ -27,6 +27,7 @@ import androidx.annotation.Nullable;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.prebid.mobile.AudioParameters;
 import org.prebid.mobile.AdSize;
 import org.prebid.mobile.BannerParameters;
 import org.prebid.mobile.DataObject;
@@ -46,6 +47,7 @@ import org.prebid.mobile.rendering.models.openrtb.bidRequests.Ext;
 import org.prebid.mobile.rendering.models.openrtb.bidRequests.Imp;
 import org.prebid.mobile.rendering.models.openrtb.bidRequests.User;
 import org.prebid.mobile.rendering.models.openrtb.bidRequests.devices.Geo;
+import org.prebid.mobile.rendering.models.openrtb.bidRequests.imps.Audio;
 import org.prebid.mobile.rendering.models.openrtb.bidRequests.imps.Banner;
 import org.prebid.mobile.rendering.models.openrtb.bidRequests.imps.Video;
 import org.prebid.mobile.rendering.models.openrtb.bidRequests.source.Source;
@@ -60,6 +62,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.function.ToIntFunction;
 
 public class BasicParameterBuilder extends ParameterBuilder {
 
@@ -77,6 +80,15 @@ public class BasicParameterBuilder extends ParameterBuilder {
     // 2 - VAST 2.0
     // 5 - VAST 2.0 Wrapper
     static final int[] SUPPORTED_VIDEO_PROTOCOLS = new int[]{2, 5};
+
+    /** What the SDK's own player (ExoPlayer) plays of an audio creative: AAC in MP4, MP3, raw AAC. */
+    public static final String[] SUPPORTED_AUDIO_MIME_TYPES = new String[]{
+            "audio/mp4",
+            "audio/mpeg",
+            "audio/aac"};
+
+    // VAST 2.0, 3.0, 4.0, 4.1+ — each inline (2, 3, 7) and wrapper (5, 6, 8)
+    static final int[] SUPPORTED_AUDIO_PROTOCOLS = new int[]{2, 3, 5, 6, 7, 8};
 
     // 1 - On Video Completion or when Terminated by User
     static final int VIDEO_INTERSTITIAL_PLAYBACK_END = 1;
@@ -138,6 +150,9 @@ public class BasicParameterBuilder extends ParameterBuilder {
             if (adConfiguration.isAdType(AdFormat.VAST)) {
                 setVideoImpValues(imp);
             }
+            if (adConfiguration.isAdType(AdFormat.AUDIO)) {
+                setAudioImpValues(imp);
+            }
         }
     }
 
@@ -145,7 +160,8 @@ public class BasicParameterBuilder extends ParameterBuilder {
         bidRequest.setId(uuid);
         bidRequest.setImpOrtbConfig(adConfiguration.getImpOrtbConfig());
         bidRequest.setGlobalOrtbConfig(adConfiguration.getGlobalOrtbConfig());
-        boolean isVideo = adConfiguration.isAdType(AdFormat.VAST);
+        // Audio wins a VAST document too, so it is cached the same way.
+        boolean isVideo = adConfiguration.isAdType(AdFormat.VAST) || adConfiguration.isAdType(AdFormat.AUDIO);
         String storedRequestId = PrebidMobile.getPrebidServerAccountId();
         String settingsId = PrebidMobile.getAuctionSettingsId();
         if (settingsId != null) {
@@ -337,6 +353,53 @@ public class BasicParameterBuilder extends ParameterBuilder {
         imp.video = video;
     }
 
+    /**
+     * The imp's {@code audio} object: the ad unit's {@link AudioParameters} where it set them, the
+     * SDK's own supported audio types and VAST protocols where it did not. Unlike video, the
+     * parameters apply to both the Rendering and the Original API, since audio is new to both.
+     */
+    private void setAudioImpValues(Imp imp) {
+        Audio audio = new Audio();
+        AudioParameters parameters = adConfiguration.getAudioParameters();
+
+        audio.mimes = SUPPORTED_AUDIO_MIME_TYPES;
+        audio.protocols = SUPPORTED_AUDIO_PROTOCOLS;
+        if (parameters != null) {
+            if (!parameters.getMimes().isEmpty()) {
+                audio.mimes = parameters.getMimes().toArray(new String[0]);
+            }
+            int[] protocols = toValues(parameters.getProtocols(), Signals.Protocols::getValue);
+            if (protocols != null) {
+                audio.protocols = protocols;
+            }
+            audio.minduration = parameters.getMinDuration();
+            audio.maxduration = parameters.getMaxDuration();
+            audio.minbitrate = parameters.getMinBitrate();
+            audio.maxbitrate = parameters.getMaxBitrate();
+            if (parameters.getStartDelay() != null) {
+                audio.startdelay = parameters.getStartDelay().getValue();
+            }
+            audio.api = toValues(parameters.getApi(), Signals.Api::getValue);
+            audio.battr = toValues(parameters.getBattr(), Signals.CreativeAttribute::getValue);
+        }
+        audio.delivery = new int[]{VIDEO_DELIVERY_DOWNLOAD};
+
+        imp.audio = audio;
+    }
+
+    /** The values of an OpenRTB enum list, or null for a null or empty list. */
+    @Nullable
+    private static <T> int[] toValues(@Nullable List<T> signals, @NonNull ToIntFunction<T> value) {
+        if (signals == null || signals.isEmpty()) {
+            return null;
+        }
+        int[] values = new int[signals.size()];
+        for (int i = 0; i < signals.size(); i++) {
+            values[i] = value.applyAsInt(signals.get(i));
+        }
+        return values;
+    }
+
     private void setVideoDimensions(@NonNull Video video) {
         VideoParameters videoParams = adConfiguration.getVideoParameters();
         @Nullable AdSize adSize = null;
@@ -403,7 +466,7 @@ public class BasicParameterBuilder extends ParameterBuilder {
         // 0 == embedded, 1 == native
         imp.clickBrowser = browserActivityAvailable ? 0 : 1;
         //set secure=1 for https or secure=0 for http
-        if (!adConfiguration.isAdType(AdFormat.VAST)) {
+        if (!adConfiguration.isAdType(AdFormat.VAST) && !adConfiguration.isAdType(AdFormat.AUDIO)) {
             imp.secure = 1;
         }
         if (adConfiguration.isRewarded()) {

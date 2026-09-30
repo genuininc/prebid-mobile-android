@@ -22,6 +22,7 @@ import android.widget.FrameLayout;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import org.prebid.mobile.LogUtil;
+import org.prebid.mobile.api.data.VastAdInfo;
 import org.prebid.mobile.api.exceptions.AdException;
 import org.prebid.mobile.configuration.AdUnitConfiguration;
 import org.prebid.mobile.rendering.bidding.data.bid.BidResponse;
@@ -182,8 +183,9 @@ public class PrebidDisplayView extends FrameLayout implements PrebidDestroyable 
             adUnitConfiguration.modifyUsingBidResponse(response);
             // The configuration is shared across refreshes of a multiformat banner, so this must
             // track the format of the current winning bid instead of latching to true.
-            adUnitConfiguration.setBuiltInVideo(response.isVideo());
-            if (response.isVideo()) {
+            // Audio is played by the same built-in video player.
+            adUnitConfiguration.setBuiltInVideo(response.isVast());
+            if (response.isVast()) {
                 displayVideoAd(response);
             } else {
                 displayHtmlAd(response);
@@ -228,6 +230,46 @@ public class PrebidDisplayView extends FrameLayout implements PrebidDestroyable 
      */
     public boolean isVideoPlaying() {
         return videoView != null && videoView.isVideoPlaybackInProgress();
+    }
+
+    public void pauseVideo() {
+        if (videoView != null) {
+            videoView.pause();
+        }
+    }
+
+    public void resumeVideo() {
+        if (videoView != null) {
+            videoView.resume();
+        }
+    }
+
+    public void setVideoMuted(boolean muted) {
+        if (videoView != null) {
+            videoView.mute(muted);
+        }
+    }
+
+    public boolean isVideoMuted() {
+        return videoView != null && videoView.isMuted();
+    }
+
+    public long getVideoPositionMs() {
+        return videoView == null ? -1 : videoView.getVideoPositionMs();
+    }
+
+    public long getVideoDurationMs() {
+        return videoView == null ? -1 : videoView.getVideoDurationMs();
+    }
+
+    public boolean performVideoClick() {
+        return videoView != null && videoView.performAdClick();
+    }
+
+    /** The video creative's {@link VastAdInfo}, or null when this view shows no VAST video. */
+    @Nullable
+    public VastAdInfo getVastAdInfo() {
+        return videoView == null ? null : videoView.getVastAdInfo();
     }
 
     private void displayHtmlAd(BidResponse response) throws AdException {

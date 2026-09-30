@@ -16,6 +16,7 @@
 
 package org.prebid.mobile.rendering.views;
 
+import androidx.annotation.Nullable;
 import android.content.Context;
 import android.os.Build;
 import android.util.Log;
@@ -23,6 +24,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import org.prebid.mobile.LogUtil;
 import org.prebid.mobile.api.data.AdFormat;
+import org.prebid.mobile.api.data.VastAdInfo;
 import org.prebid.mobile.api.exceptions.AdException;
 import org.prebid.mobile.api.rendering.InterstitialView;
 import org.prebid.mobile.configuration.AdUnitConfiguration;
@@ -35,12 +37,14 @@ import org.prebid.mobile.rendering.loading.TransactionManager;
 import org.prebid.mobile.rendering.loading.TransactionManagerListener;
 import org.prebid.mobile.rendering.models.AbstractCreative;
 import org.prebid.mobile.rendering.models.AdDetails;
+import org.prebid.mobile.rendering.models.CreativeModel;
 import org.prebid.mobile.rendering.models.HTMLCreative;
 import org.prebid.mobile.rendering.models.internal.InternalFriendlyObstruction;
 import org.prebid.mobile.rendering.models.internal.InternalPlayerState;
 import org.prebid.mobile.rendering.utils.helpers.Utils;
 import org.prebid.mobile.rendering.video.VideoAdEvent;
 import org.prebid.mobile.rendering.video.VideoCreative;
+import org.prebid.mobile.rendering.video.VideoCreativeModel;
 import org.prebid.mobile.rendering.video.VideoCreativeView;
 import org.prebid.mobile.rendering.views.interstitial.InterstitialManager;
 
@@ -260,6 +264,25 @@ public class AdViewManager implements CreativeViewListener, TransactionManagerLi
         }
     }
 
+    public boolean isMuted() {
+        return currentCreative != null && currentCreative.isMuted();
+    }
+
+    /** Where the current creative's media is, in ms, or -1 when there is none. */
+    public long getPlaybackPositionMs() {
+        return currentCreative == null ? -1 : currentCreative.getPlaybackPositionMs();
+    }
+
+    /** The current creative's media duration, in ms, or -1 while it is unknown. */
+    public long getPlaybackDurationMs() {
+        return currentCreative == null ? -1 : currentCreative.getPlaybackDurationMs();
+    }
+
+    /** Handles a tap on the current creative; false when it has nothing to open. */
+    public boolean performClick() {
+        return currentCreative != null && currentCreative.performClick();
+    }
+
     public boolean isNotShowingEndCard() {
         return currentCreative != null && (!(currentCreative.isDisplay()) || !currentCreative.isEndCard());
     }
@@ -466,6 +489,19 @@ public class AdViewManager implements CreativeViewListener, TransactionManagerLi
         }
 
         addObstructions(obstructionArray);
+    }
+
+    /**
+     * The current video creative's {@link VastAdInfo}, or null when the creative is not a VAST
+     * video (or its VAST could not be read). Available from the ad's loaded callback on.
+     */
+    @Nullable
+    public VastAdInfo getVastAdInfo() {
+        if (currentCreative == null) {
+            return null;
+        }
+        CreativeModel model = currentCreative.getCreativeModel();
+        return model instanceof VideoCreativeModel ? ((VideoCreativeModel) model).getVastAdInfo() : null;
     }
 
     private void processTransaction(Transaction transaction) {

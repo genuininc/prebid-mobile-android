@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<VAST version="4.0">
+    <Ad id="wrapper-1">
+        <Wrapper>
+            <AdSystem>Wrapping Server</AdSystem>
+            <VASTAdTagURI><![CDATA[https://ads.test/inline.xml]]></VASTAdTagURI>
+            <Impression><![CDATA[https://tracker.test/wrapper-imp]]></Impression>
+            <Creatives/>
+            <Extensions>
+                <Extension type="genuin">
+                    <CtaText>Install</CtaText>
+                    <BrandColor>#00AAFF</BrandColor>
+                </Extension>
+            </Extensions>
+        </Wrapper>
+    </Ad>
+</VAST>

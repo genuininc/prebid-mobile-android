@@ -5,6 +5,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import org.prebid.mobile.AdSize;
+import org.prebid.mobile.AudioParameters;
 import org.prebid.mobile.BannerParameters;
 import org.prebid.mobile.ContentObject;
 import org.prebid.mobile.LogUtil;
@@ -75,7 +76,14 @@ public class AdUnitConfiguration {
     private ContentObject appContent;
     private BannerParameters bannerParameters;
     private VideoParameters videoParameters;
+    private AudioParameters audioParameters;
     private NativeAdUnitConfiguration nativeConfiguration;
+    /**
+     * Whether the creative being rendered is audio: set by the creative pipeline from the winning bid
+     * (or the ad unit's formats, for a bid that does not say), and read by the VAST model maker to
+     * pick an audio media file.
+     */
+    private boolean isAudioCreative;
     private RewardManager rewardManager = new RewardManager();
 
     private final EnumSet<AdFormat> adFormats = EnumSet.noneOf(AdFormat.class);
@@ -108,6 +116,7 @@ public class AdUnitConfiguration {
         isSoundButtonVisible = source.isSoundButtonVisible;
         isOriginalAdUnit = source.isOriginalAdUnit;
         hasEndCard = source.hasEndCard;
+        isAudioCreative = source.isAudioCreative;
 
         videoSkipOffset = source.videoSkipOffset;
         autoRefreshDelayInMillis = source.autoRefreshDelayInMillis;
@@ -134,6 +143,7 @@ public class AdUnitConfiguration {
         appContent = source.appContent;
         bannerParameters = source.bannerParameters;
         videoParameters = source.videoParameters;
+        audioParameters = source.audioParameters;
         nativeConfiguration = source.nativeConfiguration;
         rewardManager = source.rewardManager;
 
@@ -225,6 +235,23 @@ public class AdUnitConfiguration {
     @Nullable
     public VideoParameters getVideoParameters() {
         return videoParameters;
+    }
+
+    public void setAudioParameters(@Nullable AudioParameters parameters) {
+        audioParameters = parameters;
+    }
+
+    @Nullable
+    public AudioParameters getAudioParameters() {
+        return audioParameters;
+    }
+
+    public void setAudioCreative(boolean isAudioCreative) {
+        this.isAudioCreative = isAudioCreative;
+    }
+
+    public boolean isAudioCreative() {
+        return isAudioCreative;
     }
 
 

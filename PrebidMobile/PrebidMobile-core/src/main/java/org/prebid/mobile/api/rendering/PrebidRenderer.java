@@ -96,6 +96,7 @@ public class PrebidRenderer implements PrebidMobilePluginRenderer {
         return adUnitConfiguration.isAdType(AdFormat.BANNER) ||
                 adUnitConfiguration.isAdType(AdFormat.INTERSTITIAL) ||
                 adUnitConfiguration.isAdType(AdFormat.NATIVE) ||
-                adUnitConfiguration.isAdType(AdFormat.VAST);
+                adUnitConfiguration.isAdType(AdFormat.VAST) ||
+                adUnitConfiguration.isAdType(AdFormat.AUDIO);
     }
 }

@@ -43,6 +43,7 @@ public class BidResponse {
     public static final String KEY_RENDERER_NAME = "rendererName";
     public static final String KEY_RENDERER_VERSION = "rendererVersion";
     public static final String TYPE_VIDEO = "video";
+    public static final String TYPE_AUDIO = "audio";
 
     // ID of the bid request to which this is a response
     private String id;
@@ -252,6 +253,20 @@ public class BidResponse {
         }
 
         return Utils.isVast(bid.getAdm());
+    }
+
+    /** Whether the winning bid is an audio ad ({@code ext.prebid.type} {@code "audio"}). */
+    public boolean isAudio() {
+        Bid bid = getWinningBid();
+        return bid != null && TYPE_AUDIO.equals(bid.getType());
+    }
+
+    /**
+     * Whether the winning bid is a VAST document the SDK's video pipeline plays: a video ad, or an
+     * audio one — both are rendered, and tracked, by the same player.
+     */
+    public boolean isVast() {
+        return isVideo() || isAudio();
     }
 
     /**

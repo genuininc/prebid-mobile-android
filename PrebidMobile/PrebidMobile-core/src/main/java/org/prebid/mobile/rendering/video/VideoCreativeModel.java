@@ -16,7 +16,10 @@
 
 package org.prebid.mobile.rendering.video;
 
+import androidx.annotation.Nullable;
+
 import org.prebid.mobile.LogUtil;
+import org.prebid.mobile.api.data.VastAdInfo;
 import org.prebid.mobile.configuration.AdUnitConfiguration;
 import org.prebid.mobile.rendering.models.CreativeModel;
 import org.prebid.mobile.rendering.models.internal.InternalPlayerState;
@@ -41,6 +44,8 @@ public class VideoCreativeModel extends CreativeModel {
     // interstitial video: click-through URL
     private String vastClickthroughUrl;
     private AdVerifications adVerifications;
+    private VastAdInfo vastAdInfo;
+    private boolean isAudio;
 
 
     public VideoCreativeModel(
@@ -125,6 +130,25 @@ public class VideoCreativeModel extends CreativeModel {
 
     public void setVastClickthroughUrl(String vastClickthroughUrl) {
         this.vastClickthroughUrl = vastClickthroughUrl;
+    }
+
+    /** What the creative's VAST says about itself, for the app's own UI; see {@link VastAdInfo}. */
+    @Nullable
+    public VastAdInfo getVastAdInfo() {
+        return vastAdInfo;
+    }
+
+    public void setVastAdInfo(@Nullable VastAdInfo vastAdInfo) {
+        this.vastAdInfo = vastAdInfo;
+    }
+
+    /** Whether the creative is audio: its media is an audio file, with nothing to watch. */
+    public boolean isAudio() {
+        return isAudio;
+    }
+
+    public void setAudio(boolean isAudio) {
+        this.isAudio = isAudio;
     }
 
     public AdVerifications getAdVerifications() {

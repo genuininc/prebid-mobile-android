@@ -141,6 +141,37 @@ public abstract class AbstractCreative {
     }
 
     /**
+     * @return whether the creative is muted
+     */
+    public boolean isMuted() {
+        return false;
+    }
+
+    /**
+     * @return where the creative's media is, in ms, or -1 when it has none
+     */
+    public long getPlaybackPositionMs() {
+        return -1;
+    }
+
+    /**
+     * @return the creative's media duration from its player, in ms, or -1 while it is unknown
+     */
+    public long getPlaybackDurationMs() {
+        return -1;
+    }
+
+    /**
+     * Handles a tap on the creative as if the viewer tapped it.
+     *
+     * @return false when the creative has nothing to open
+     */
+    public boolean performClick() {
+        LogUtil.debug(TAG, "performClick(): Base method implementation: ignoring");
+        return false;
+    }
+
+    /**
      * @return media duration in ms
      */
     public long getMediaDuration() {
