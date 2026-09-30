@@ -6,8 +6,9 @@
 // What is published, and why this way:
 //  - org.prebid:prebid-mobile-sdk-core:<forkVersion> — the core module's release AAR, the one
 //    artifact our changes live in.
-//  - org.prebid:prebid-mobile-sdk:<forkVersion> — the umbrella the apps depend on: Prebid's own
-//    stub jar plus a dependency on the core above.
+//  - org.prebid:prebid-mobile-sdk:<forkVersion> — the umbrella the apps depend on: an empty jar
+//    (META-INF only, like the one buildPrebidMobile.sh builds for a release) plus a dependency on
+//    the core above. Not scripts/Maven/stub.jar, which is not a jar at all.
 // Their dependency lists are read from Prebid's release POMs, not from the Gradle build: the core
 // module depends on a local wrapper of the Open Measurement AAR (:omsdk-android), which is
 // released separately as org.prebid:prebid-mobile-sdk-open-measurement (unchanged, 1.4.1, from
@@ -72,6 +73,13 @@ project(':PrebidMobile-core') {
 }
 
 project(':PrebidMobile') {
+    def umbrellaJar = tasks.register('genuinUmbrellaJar', Jar) {
+        archiveBaseName = 'prebid-mobile-sdk'
+        archiveVersion = rootProject.genuinForkVersion
+        destinationDirectory = layout.buildDirectory.dir('genuin')
+        from(rootProject.file('scripts/genuin/umbrella'))
+    }
+
     afterEvaluate {
         publishing {
             publications {
@@ -79,7 +87,7 @@ project(':PrebidMobile') {
                     groupId = rootProject.artifactGroupId
                     artifactId = 'prebid-mobile-sdk'
                     version = rootProject.genuinForkVersion
-                    artifact(rootProject.file('scripts/Maven/stub.jar'))
+                    artifact(umbrellaJar)
                     pom {
                         describe(it, 'PrebidMobile')
                         withXml { copyOfficialDependencies(asNode(), officialPom('PrebidMobile')) }
