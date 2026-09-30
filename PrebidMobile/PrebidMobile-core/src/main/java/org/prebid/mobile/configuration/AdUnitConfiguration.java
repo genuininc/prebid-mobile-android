@@ -84,6 +84,11 @@ public class AdUnitConfiguration {
      * pick an audio media file.
      */
     private boolean isAudioCreative;
+    /**
+     * Whether Prebid draws its own controls (the volume button) over a video in a banner. An app
+     * that draws its own over the ad — through the BannerView playback controls — turns them off.
+     */
+    private boolean isBuiltInVideoControlsVisible = true;
     private RewardManager rewardManager = new RewardManager();
 
     private final EnumSet<AdFormat> adFormats = EnumSet.noneOf(AdFormat.class);
@@ -117,6 +122,7 @@ public class AdUnitConfiguration {
         isOriginalAdUnit = source.isOriginalAdUnit;
         hasEndCard = source.hasEndCard;
         isAudioCreative = source.isAudioCreative;
+        isBuiltInVideoControlsVisible = source.isBuiltInVideoControlsVisible;
 
         videoSkipOffset = source.videoSkipOffset;
         autoRefreshDelayInMillis = source.autoRefreshDelayInMillis;
@@ -252,6 +258,14 @@ public class AdUnitConfiguration {
 
     public boolean isAudioCreative() {
         return isAudioCreative;
+    }
+
+    public void setBuiltInVideoControlsVisible(boolean visible) {
+        isBuiltInVideoControlsVisible = visible;
+    }
+
+    public boolean isBuiltInVideoControlsVisible() {
+        return isBuiltInVideoControlsVisible;
     }
 
 

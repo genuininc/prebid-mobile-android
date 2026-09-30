@@ -616,6 +616,14 @@ public class BannerView extends FrameLayout {
     // them still fire, exactly as if the viewer had used Prebid's own controls.
     // ---------------------------------------------------------------------------------------------
 
+    /**
+     * Whether Prebid draws its own controls (the volume button) over the video. On by default; an app
+     * that draws its own controls with the methods below turns them off. Set before {@link #loadAd()}.
+     */
+    public void setBuiltInVideoControlsVisible(boolean visible) {
+        adUnitConfig.setBuiltInVideoControlsVisible(visible);
+    }
+
     /** Pauses the video. It stays paused until {@link #resumeVideo()}, whatever its visibility does. */
     public void pauseVideo() {
         if (displayView != null) {

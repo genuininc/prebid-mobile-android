@@ -184,6 +184,7 @@ public class AdUnitConfigurationTest {
         subject.setRewarded(true);
         subject.setBuiltInVideo(true);
         subject.setAudioCreative(true);
+        subject.setBuiltInVideoControlsVisible(false);
         subject.setAudioParameters(new AudioParameters());
         subject.setImpOrtbConfig("{\"a\":1}");
         subject.addSize(new AdSize(300, 250));
@@ -197,6 +198,7 @@ public class AdUnitConfigurationTest {
         assertEquals(subject.isRewarded(), copy.isRewarded());
         assertEquals(subject.isBuiltInVideo(), copy.isBuiltInVideo());
         assertEquals(subject.isAudioCreative(), copy.isAudioCreative());
+        assertEquals(subject.isBuiltInVideoControlsVisible(), copy.isBuiltInVideoControlsVisible());
         assertEquals(subject.getAudioParameters(), copy.getAudioParameters());
         assertEquals(subject.getImpOrtbConfig(), copy.getImpOrtbConfig());
         assertEquals(subject.getSizes(), copy.getSizes());
@@ -241,7 +243,7 @@ public class AdUnitConfigurationTest {
                 "configId", "pbAdSlot", "interstitialSize", "impressionUrl", "fingerprint", "gpid",
                 "impOrtbConfig", "globalOrtbConfig", "closeButtonPosition", "skipButtonPosition",
                 "minSizePercentage", "placementType", "adPosition", "appContent", "bannerParameters",
-                "videoParameters", "audioParameters", "isAudioCreative", "nativeConfiguration", "rewardManager",
+                "videoParameters", "audioParameters", "isAudioCreative", "isBuiltInVideoControlsVisible", "nativeConfiguration", "rewardManager",
                 "adFormats", "adSizes"
         ));
 

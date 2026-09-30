@@ -61,6 +61,10 @@ public class VideoView extends BaseAdView {
     private boolean enableVideoPlayerClick;
     private boolean enableAutoPlay = true;
 
+    /** The configuration the video is loaded under; decides whether Prebid's own controls show. */
+    @Nullable
+    private AdUnitConfiguration adUnitConfiguration;
+
     //region ========== Listener Area
 
     private final AdViewManagerListener onAdViewManagerListener = new AdViewManagerListener() {
@@ -139,6 +143,7 @@ public class VideoView extends BaseAdView {
         AdUnitConfiguration adUnitConfiguration
     ) throws AdException {
         super(context);
+        this.adUnitConfiguration = adUnitConfiguration;
         prepareAdConfiguration(adUnitConfiguration);
         init();
     }
@@ -147,6 +152,7 @@ public class VideoView extends BaseAdView {
         AdUnitConfiguration adUnitConfiguration,
         BidResponse bidResponse
     ) {
+        this.adUnitConfiguration = adUnitConfiguration;
         adViewManager.loadBidTransaction(adUnitConfiguration, bidResponse);
     }
 
@@ -154,6 +160,7 @@ public class VideoView extends BaseAdView {
         AdUnitConfiguration adConfiguration,
         String vastXml
     ) {
+        this.adUnitConfiguration = adConfiguration;
         stopVisibilityTracking();
         changeState(State.UNDEFINED);
 
@@ -304,8 +311,10 @@ public class VideoView extends BaseAdView {
         if (enableVideoPlayerClick) {
             videoCreativeView.enableVideoPlayerClick();
         }
-        videoCreativeView.showVolumeControls();
-        addVideoControlObstruction(videoCreativeView.getVolumeControlView(), "Volume button");
+        if (adUnitConfiguration == null || adUnitConfiguration.isBuiltInVideoControlsVisible()) {
+            videoCreativeView.showVolumeControls();
+            addVideoControlObstruction(videoCreativeView.getVolumeControlView(), "Volume button");
+        }
 
         addView(view);
     }

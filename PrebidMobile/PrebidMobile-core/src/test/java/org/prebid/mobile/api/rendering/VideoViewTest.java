@@ -384,6 +384,20 @@ public class VideoViewTest {
     }
 
     @Test
+    public void viewReadyForImmediateDisplay_builtInControlsHidden_NoPrebidVolumeButton() throws Exception {
+        final VideoCreativeView mockVideoCreativeView = mock(VideoCreativeView.class);
+        when(mockAdViewManager.isNotShowingEndCard()).thenReturn(true);
+        AdUnitConfiguration configuration = new AdUnitConfiguration();
+        configuration.setBuiltInVideoControlsVisible(false);
+        WhiteBox.field(VideoView.class, "adUnitConfiguration").set(videoView, configuration);
+
+        adViewManagerListener.viewReadyForImmediateDisplay(mockVideoCreativeView);
+
+        verify(mockVideoViewListener).onDisplayed(eq(videoView));
+        verify(mockVideoCreativeView, never()).showVolumeControls();
+    }
+
+    @Test
     public void viewReadyForImmediateDisplay_hasEndCard_ShowEndCard_noListenerInvocation() {
         final View mockView = mock(View.class);
         reset(mockView);
