@@ -674,6 +674,19 @@ public class BannerView extends FrameLayout {
         return displayView != null && displayView.performVideoClick();
     }
 
+    /**
+     * Handles a tap on the app's own skip control as the viewer's skip: stops the video, fires the
+     * VAST skip tracker and completes the ad, which is reported through
+     * {@link org.prebid.mobile.api.rendering.listeners.BannerVideoListener#onVideoCompleted}. Allowed
+     * only for a VAST with a {@code skipoffset} ({@link VastAdInfo#getSkipOffsetMs()}), once the video
+     * has played that far.
+     *
+     * @return false when there is no video, or it cannot be skipped (yet)
+     */
+    public boolean skipVideo() {
+        return displayView != null && displayView.skipVideo();
+    }
+
     private void markPrimaryAdRequestFinished() {
         isPrimaryAdServerRequestInProgress = false;
     }

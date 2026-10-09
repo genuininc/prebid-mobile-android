@@ -206,6 +206,11 @@ public class VideoView extends BaseAdView {
         return adViewManager != null && adViewManager.performClick();
     }
 
+    /** Skips the video as the viewer's own skip; false when it cannot be skipped (yet). */
+    public boolean performAdSkip() {
+        return adViewManager != null && adViewManager.performSkip();
+    }
+
     /** The loaded video's {@link VastAdInfo}, or null before it loads; see {@link AdViewManager#getVastAdInfo()}. */
     @Nullable
     public VastAdInfo getVastAdInfo() {

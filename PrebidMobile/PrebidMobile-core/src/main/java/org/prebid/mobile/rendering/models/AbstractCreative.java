@@ -172,6 +172,16 @@ public abstract class AbstractCreative {
     }
 
     /**
+     * Skips the creative as if the viewer used its skip control.
+     *
+     * @return false when the creative cannot be skipped (yet)
+     */
+    public boolean performSkip() {
+        LogUtil.debug(TAG, "performSkip(): Base method implementation: ignoring");
+        return false;
+    }
+
+    /**
      * @return media duration in ms
      */
     public long getMediaDuration() {

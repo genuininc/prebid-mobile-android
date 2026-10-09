@@ -19,7 +19,9 @@ package org.prebid.mobile.rendering.video;
 import androidx.media3.common.C;
 import android.app.Activity;
 import android.content.Context;
+import android.graphics.SurfaceTexture;
 import android.net.Uri;
+import android.view.TextureView;
 import androidx.media3.common.Player;
 import androidx.media3.exoplayer.ExoPlayer;
 import androidx.media3.exoplayer.source.MediaSource;
@@ -54,6 +56,12 @@ public class ExoPlayerViewTest {
         WhiteBox.field(ExoPlayerView.class, "player").set(exoPlayerView, mockExoPlayer);
 
         reset(mockVideoCreative, mockExoPlayer);
+    }
+
+    @Test
+    public void videoSurface_IsATextureView() {
+        // A SurfaceView keeps the first window's geometry when an app moves the ad between windows.
+        assertTrue(exoPlayerView.getVideoSurfaceView() instanceof TextureView);
     }
 
     @Test
@@ -153,9 +161,104 @@ public class ExoPlayerViewTest {
     }
 
     @Test
-    public void pause() {
+    public void pause_KeepsThePlayerPrepared() {
         exoPlayerView.pause();
-        verify(mockExoPlayer).stop();
+
+        verify(mockExoPlayer).setPlayWhenReady(false);
+        verify(mockExoPlayer, never()).stop();
+    }
+
+    @Test
+    public void resume_PreparedPlayer_PlaysOnWithoutPreparingAgain() {
+        exoPlayerView.setVideoUri(Uri.EMPTY);
+        when(mockExoPlayer.getPlaybackState()).thenReturn(Player.STATE_READY);
+        exoPlayerView.pause();
+
+        exoPlayerView.resume();
+
+        verify(mockExoPlayer).setPlayWhenReady(true);
+        verify(mockExoPlayer, never()).prepare();
+    }
+
+    @Test
+    public void readyWhilePaused_StaysPaused() throws IllegalAccessException {
+        WhiteBox.field(ExoPlayerView.class, "adViewProgressUpdateTask")
+                .set(exoPlayerView, mock(AdViewProgressUpdateTask.class));
+        Player.Listener listener =
+                (Player.Listener) WhiteBox.field(ExoPlayerView.class, "eventListener").get(exoPlayerView);
+        exoPlayerView.pause();
+
+        listener.onPlaybackStateChanged(Player.STATE_READY);
+
+        verify(mockExoPlayer, never()).setPlayWhenReady(true);
+    }
+
+    @Test
+    public void surfaceLeavingItsWindow_KeptAndNotReportedToThePlayer() throws IllegalAccessException {
+        TextureView textureView = (TextureView) exoPlayerView.getVideoSurfaceView();
+        TextureView.SurfaceTextureListener playerListener = mock(TextureView.SurfaceTextureListener.class);
+        textureView.setSurfaceTextureListener(playerListener);
+        exoPlayerView.retainSurfaceAcrossWindows();
+        SurfaceTexture texture = mock(SurfaceTexture.class);
+
+        boolean released = textureView.getSurfaceTextureListener().onSurfaceTextureDestroyed(texture);
+
+        assertFalse(released);
+        verify(playerListener, never()).onSurfaceTextureDestroyed(any());
+        assertSame(texture, WhiteBox.field(ExoPlayerView.class, "retainedSurfaceTexture").get(exoPlayerView));
+    }
+
+    @Test
+    public void surfaceListener_OtherwiseThePlayers() {
+        TextureView textureView = (TextureView) exoPlayerView.getVideoSurfaceView();
+        TextureView.SurfaceTextureListener playerListener = mock(TextureView.SurfaceTextureListener.class);
+        textureView.setSurfaceTextureListener(playerListener);
+        exoPlayerView.retainSurfaceAcrossWindows();
+        SurfaceTexture texture = mock(SurfaceTexture.class);
+
+        textureView.getSurfaceTextureListener().onSurfaceTextureAvailable(texture, 16, 9);
+
+        verify(playerListener).onSurfaceTextureAvailable(texture, 16, 9);
+    }
+
+    @Test
+    public void newSurfaceWhileOneIsKept_PlayerStaysOnTheKeptOne() throws IllegalAccessException {
+        TextureView textureView = (TextureView) exoPlayerView.getVideoSurfaceView();
+        TextureView.SurfaceTextureListener playerListener = mock(TextureView.SurfaceTextureListener.class);
+        textureView.setSurfaceTextureListener(playerListener);
+        exoPlayerView.retainSurfaceAcrossWindows();
+        SurfaceTexture kept = mock(SurfaceTexture.class);
+        WhiteBox.field(ExoPlayerView.class, "retainedSurfaceTexture").set(exoPlayerView, kept);
+
+        textureView.getSurfaceTextureListener().onSurfaceTextureAvailable(mock(SurfaceTexture.class), 16, 9);
+
+        verify(playerListener, never()).onSurfaceTextureAvailable(any(), anyInt(), anyInt());
+        assertSame(kept, WhiteBox.field(ExoPlayerView.class, "restoringSurfaceTexture").get(exoPlayerView));
+    }
+
+    @Test
+    public void emptySurfaceGoneBeforeTheHandBack_ReleasedAndTheKeptOneStays() throws IllegalAccessException {
+        TextureView textureView = (TextureView) exoPlayerView.getVideoSurfaceView();
+        textureView.setSurfaceTextureListener(mock(TextureView.SurfaceTextureListener.class));
+        exoPlayerView.retainSurfaceAcrossWindows();
+        SurfaceTexture kept = mock(SurfaceTexture.class);
+        WhiteBox.field(ExoPlayerView.class, "restoringSurfaceTexture").set(exoPlayerView, kept);
+
+        boolean released = textureView.getSurfaceTextureListener().onSurfaceTextureDestroyed(mock(SurfaceTexture.class));
+
+        assertTrue(released);
+        assertNull(WhiteBox.field(ExoPlayerView.class, "retainedSurfaceTexture").get(exoPlayerView));
+        assertSame(kept, WhiteBox.field(ExoPlayerView.class, "restoringSurfaceTexture").get(exoPlayerView));
+    }
+
+    @Test
+    public void destroy_ReleasesAKeptSurface() throws IllegalAccessException {
+        SurfaceTexture texture = mock(SurfaceTexture.class);
+        WhiteBox.field(ExoPlayerView.class, "retainedSurfaceTexture").set(exoPlayerView, texture);
+
+        exoPlayerView.destroy();
+
+        verify(texture).release();
     }
 
     @Test

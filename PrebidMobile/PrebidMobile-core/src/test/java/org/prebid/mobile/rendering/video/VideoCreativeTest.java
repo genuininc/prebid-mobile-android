@@ -337,6 +337,40 @@ public class VideoCreativeTest {
     }
 
     @Test
+    public void performSkip_PastTheSkipOffset_StopsTracksAndCompletes() {
+        CreativeViewListener listener = mock(CreativeViewListener.class);
+        videoCreative.setCreativeViewListener(listener);
+        when(mockModel.getSkipOffset()).thenReturn(5_000L);
+        when(mockVideoCreativeView.getPlaybackPositionMs()).thenReturn(5_200L);
+
+        assertTrue(videoCreative.performSkip());
+
+        verify(mockVideoCreativeView).stop();
+        verify(mockModel).trackVideoEvent(VideoAdEvent.Event.AD_SKIP);
+        verify(listener).creativeDidComplete(videoCreative);
+    }
+
+    @Test
+    public void performSkip_BeforeTheSkipOffset_IsRefused() {
+        when(mockModel.getSkipOffset()).thenReturn(5_000L);
+        when(mockVideoCreativeView.getPlaybackPositionMs()).thenReturn(2_000L);
+
+        assertFalse(videoCreative.performSkip());
+
+        verify(mockVideoCreativeView, never()).stop();
+        verify(mockModel, never()).trackVideoEvent(VideoAdEvent.Event.AD_SKIP);
+    }
+
+    @Test
+    public void performSkip_NotSkippable_IsRefused() {
+        when(mockModel.getSkipOffset()).thenReturn(-1L);
+        when(mockVideoCreativeView.getPlaybackPositionMs()).thenReturn(20_000L);
+
+        assertFalse(videoCreative.performSkip());
+        verify(mockVideoCreativeView, never()).stop();
+    }
+
+    @Test
     public void getPlaybackDurationMs_PlayerNotKnowingIt_FallsBackToTheVastDuration() {
         when(mockVideoCreativeView.getPlaybackDurationMs()).thenReturn(-1L);
         when(mockModel.getMediaDuration()).thenReturn(15_000L);

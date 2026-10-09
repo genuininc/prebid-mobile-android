@@ -283,6 +283,11 @@ public class AdViewManager implements CreativeViewListener, TransactionManagerLi
         return currentCreative != null && currentCreative.performClick();
     }
 
+    /** Skips the current creative; false when it cannot be skipped (yet). */
+    public boolean performSkip() {
+        return currentCreative != null && currentCreative.performSkip();
+    }
+
     public boolean isNotShowingEndCard() {
         return currentCreative != null && (!(currentCreative.isDisplay()) || !currentCreative.isEndCard());
     }

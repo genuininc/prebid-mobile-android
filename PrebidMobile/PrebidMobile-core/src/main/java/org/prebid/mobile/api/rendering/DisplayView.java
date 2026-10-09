@@ -152,6 +152,11 @@ public class DisplayView extends FrameLayout {
         return view != null && view.performVideoClick();
     }
 
+    public boolean skipVideo() {
+        PrebidDisplayView view = prebidView();
+        return view != null && view.skipVideo();
+    }
+
     /**
      * The video creative's {@link VastAdInfo}, or null when the ad is not a VAST video rendered by
      * Prebid's own renderer.

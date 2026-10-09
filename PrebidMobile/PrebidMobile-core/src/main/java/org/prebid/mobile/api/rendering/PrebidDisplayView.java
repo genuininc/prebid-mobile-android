@@ -266,6 +266,10 @@ public class PrebidDisplayView extends FrameLayout implements PrebidDestroyable 
         return videoView != null && videoView.performAdClick();
     }
 
+    public boolean skipVideo() {
+        return videoView != null && videoView.performAdSkip();
+    }
+
     /** The video creative's {@link VastAdInfo}, or null when this view shows no VAST video. */
     @Nullable
     public VastAdInfo getVastAdInfo() {

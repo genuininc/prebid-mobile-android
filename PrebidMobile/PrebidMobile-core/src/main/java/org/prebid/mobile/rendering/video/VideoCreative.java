@@ -237,6 +237,27 @@ public class VideoCreative extends VideoCreativeProtocol
         return videoCreativeView != null && videoCreativeView.performCallToActionClick();
     }
 
+    /**
+     * The viewer's skip from an app's own skip control: allowed only for a VAST with a
+     * {@code skipoffset}, once the player has reached it (or while a paused player cannot say where
+     * it is — the app's own control is what waits out the offset then). Stops the player, then skips
+     * as Prebid's own control does: the VAST skip tracker fires and the creative completes.
+     */
+    @Override
+    public boolean performSkip() {
+        long skipOffsetMs = model.getSkipOffset();
+        if (videoCreativeView == null || skipOffsetMs < 0) {
+            return false;
+        }
+        long positionMs = videoCreativeView.getPlaybackPositionMs();
+        if (positionMs >= 0 && positionMs < skipOffsetMs) {
+            return false;
+        }
+        videoCreativeView.stop();
+        skip();
+        return true;
+    }
+
     @Override
     public void unmute() {
         if (videoCreativeView != null) {
