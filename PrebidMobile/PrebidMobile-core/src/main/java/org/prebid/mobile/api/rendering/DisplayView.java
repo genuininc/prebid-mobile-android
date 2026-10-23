@@ -111,6 +111,12 @@ public class DisplayView extends FrameLayout {
         return adView instanceof PrebidDisplayView ? (PrebidDisplayView) adView : null;
     }
 
+    /** Starts a loaded video that waits to be started; false when there is none. */
+    public boolean startVideo() {
+        PrebidDisplayView view = prebidView();
+        return view != null && view.startVideo();
+    }
+
     public void pauseVideo() {
         PrebidDisplayView view = prebidView();
         if (view != null) {

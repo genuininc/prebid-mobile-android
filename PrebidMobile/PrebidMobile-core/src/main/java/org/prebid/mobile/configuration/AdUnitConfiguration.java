@@ -89,6 +89,11 @@ public class AdUnitConfiguration {
      * that draws its own over the ad — through the BannerView playback controls — turns them off.
      */
     private boolean isBuiltInVideoControlsVisible = true;
+    /**
+     * Whether a video in a banner starts by itself once loaded (on load, and when it becomes
+     * visible). An app that loads ads ahead and starts them itself turns it off.
+     */
+    private boolean isVideoAutoStart = true;
     private RewardManager rewardManager = new RewardManager();
 
     private final EnumSet<AdFormat> adFormats = EnumSet.noneOf(AdFormat.class);
@@ -123,6 +128,7 @@ public class AdUnitConfiguration {
         hasEndCard = source.hasEndCard;
         isAudioCreative = source.isAudioCreative;
         isBuiltInVideoControlsVisible = source.isBuiltInVideoControlsVisible;
+        isVideoAutoStart = source.isVideoAutoStart;
 
         videoSkipOffset = source.videoSkipOffset;
         autoRefreshDelayInMillis = source.autoRefreshDelayInMillis;
@@ -266,6 +272,14 @@ public class AdUnitConfiguration {
 
     public boolean isBuiltInVideoControlsVisible() {
         return isBuiltInVideoControlsVisible;
+    }
+
+    public void setVideoAutoStart(boolean autoStart) {
+        isVideoAutoStart = autoStart;
+    }
+
+    public boolean isVideoAutoStart() {
+        return isVideoAutoStart;
     }
 
 

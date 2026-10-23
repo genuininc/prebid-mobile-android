@@ -551,4 +551,23 @@ public class AdViewManagerTest {
         verify(mockCreative).createOmAdSession();
         verify(mockAdViewListener).adLoaded(any(AdDetails.class));
     }
+
+    @Test
+    public void isAutoDisplayOnLoad_builtInVideo_True() throws Exception {
+        AdUnitConfiguration configuration = new AdUnitConfiguration();
+        configuration.setBuiltInVideo(true);
+        WhiteBox.field(AdViewManager.class, "adConfiguration").set(adViewManager, configuration);
+
+        assertTrue(adViewManager.isAutoDisplayOnLoad());
+    }
+
+    @Test
+    public void isAutoDisplayOnLoad_builtInVideoWithoutAutoStart_False() throws Exception {
+        AdUnitConfiguration configuration = new AdUnitConfiguration();
+        configuration.setBuiltInVideo(true);
+        configuration.setVideoAutoStart(false);
+        WhiteBox.field(AdViewManager.class, "adConfiguration").set(adViewManager, configuration);
+
+        assertFalse(adViewManager.isAutoDisplayOnLoad());
+    }
 }

@@ -243,7 +243,8 @@ public class AdUnitConfigurationTest {
                 "configId", "pbAdSlot", "interstitialSize", "impressionUrl", "fingerprint", "gpid",
                 "impOrtbConfig", "globalOrtbConfig", "closeButtonPosition", "skipButtonPosition",
                 "minSizePercentage", "placementType", "adPosition", "appContent", "bannerParameters",
-                "videoParameters", "audioParameters", "isAudioCreative", "isBuiltInVideoControlsVisible", "nativeConfiguration", "rewardManager",
+                "videoParameters", "audioParameters", "isAudioCreative", "isBuiltInVideoControlsVisible",
+                "isVideoAutoStart", "nativeConfiguration", "rewardManager",
                 "adFormats", "adSizes"
         ));
 

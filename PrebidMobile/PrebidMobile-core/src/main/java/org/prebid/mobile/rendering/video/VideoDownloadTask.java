@@ -73,16 +73,28 @@ public class VideoDownloadTask extends FileDownloadTask {
         if (file.exists() && !LruController.isAlreadyCached(shortenedPath)) {
             LogUtil.debug(TAG, "Video saved to cache");
             ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-            readAndWriteData(connection, result, outputStream, false);
+            readAndWriteData(connection, result, outputStream, null);
             LruController.putVideoCache(shortenedPath, outputStream.toByteArray());
         } else {
             LogUtil.debug(TAG, "Video saved to file: " + shortenedPath);
-            readAndWriteData(connection, result, new FileOutputStream(file), true);
+            // Ads with the same creative share this file. Written straight into it, a download
+            // would leave it half-written while another ad's player reads it (an EOF partway
+            // through), or truncate it under that player. Written aside and moved into place once
+            // complete, the file is always whole, and a player that has it open keeps its copy.
+            File partial = new File(file.getParentFile(), file.getName() + "." + System.nanoTime() + ".part");
+            if (readAndWriteData(connection, result, new FileOutputStream(partial), partial) && !partial.renameTo(file)) {
+                partial.delete();
+                throw new IOException("Could not move the downloaded video into place: " + shortenedPath);
+            }
         }
     }
 
-    private void readAndWriteData(URLConnection in, GetUrlResult result, OutputStream out,
-                                  boolean deleteOnAbort) throws IOException {
+    /**
+     * Copies the response into {@code out}; false when the task was cancelled, in which case
+     * {@code deleteOnAbort} (if any) is deleted.
+     */
+    private boolean readAndWriteData(URLConnection in, GetUrlResult result, OutputStream out,
+                                     File deleteOnAbort) throws IOException {
         int length = in.getContentLength();
         InputStream is = in.getInputStream();
         byte[] data = new byte[16384];
@@ -92,13 +104,11 @@ public class VideoDownloadTask extends FileDownloadTask {
             while ((count = is.read(data)) != -1) {
                 // allow canceling with back button
                 if (isCancelled()) {
-                    if (deleteOnAbort) {
-                        if (file.exists()) {
-                            file.delete();
-                        }
+                    if (deleteOnAbort != null && deleteOnAbort.exists()) {
+                        deleteOnAbort.delete();
                     }
                     result.setException(null);
-                    return;
+                    return false;
                 }
                 total += count;
                 // publishing the progress....
@@ -125,6 +135,7 @@ public class VideoDownloadTask extends FileDownloadTask {
             catch (Exception ignored) {
             }
         }
+        return true;
     }
 
     private GetUrlResult createResult(GetUrlParams param)

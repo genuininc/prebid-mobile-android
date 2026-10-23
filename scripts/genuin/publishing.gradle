@@ -18,7 +18,7 @@
 // The fork version is only the published coordinate: BuildConfig.VERSION — what the SDK reports to
 // Prebid Server in every bid request — stays prebidSdkVersionName, so demand sees a normal SDK.
 
-ext.genuinForkVersion = "${prebidSdkVersionName}-genuin.4"
+ext.genuinForkVersion = "${prebidSdkVersionName}-genuin.8"
 
 def officialPom = { String module -> rootProject.file("scripts/Maven/${module}-pom.xml") }
 

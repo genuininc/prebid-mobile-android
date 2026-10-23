@@ -37,6 +37,7 @@ import org.robolectric.annotation.LooperMode;
 import java.io.File;
 import java.io.IOException;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.robolectric.annotation.LooperMode.Mode.LEGACY;
 
@@ -109,5 +110,22 @@ public class VideoDownloadTaskTest {
         VideoDownloadTask task = new VideoDownloadTask(context.getApplicationContext(), file, listener, Mockito.mock(AdUnitConfiguration.class));
         task.execute(params);
         assertNotNull(error);
+    }
+
+    @Test
+    public void download_movesTheCompleteFileIntoPlace_andLeavesNoPartialFile() throws IOException {
+        String body = ResourceUtils.convertResourceToString("mraid.js");
+        server.enqueue(new MockResponse().setResponseCode(200).setBody(body));
+
+        VideoDownloadTask task = new VideoDownloadTask(
+                context.getApplicationContext(),
+                file, listener, Mockito.mock(AdUnitConfiguration.class));
+        task.execute(params);
+
+        assertNotNull(path);
+        assertEquals(body.length(), file.length());
+        File dir = file.getAbsoluteFile().getParentFile();
+        String[] partials = dir.list((d, name) -> name.startsWith(file.getName() + ".") && name.endsWith(".part"));
+        assertEquals(0, partials == null ? 0 : partials.length);
     }
 }

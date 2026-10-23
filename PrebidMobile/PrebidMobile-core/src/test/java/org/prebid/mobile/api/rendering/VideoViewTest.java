@@ -42,7 +42,9 @@ import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.*;
 import static org.prebid.mobile.api.rendering.VideoView.State.*;
 
@@ -384,6 +386,40 @@ public class VideoViewTest {
     }
 
     @Test
+    public void viewReadyForImmediateDisplay_autoDisplayedOnLoad_StatePlaying_NotPlayedAgain() {
+        when(mockAdViewManager.isNotShowingEndCard()).thenReturn(true);
+        changeVideoViewState(PLAYBACK_NOT_STARTED);
+
+        adViewManagerListener.viewReadyForImmediateDisplay(mock(VideoCreativeView.class));
+        videoView.play();
+
+        assertEquals(PLAYING, getVideoViewState());
+        verify(mockAdViewManager, never()).show();
+    }
+
+    @Test
+    public void viewReadyForImmediateDisplay_autoDisplayedOnLoad_CanBePaused() {
+        when(mockAdViewManager.isNotShowingEndCard()).thenReturn(true);
+        changeVideoViewState(PLAYBACK_NOT_STARTED);
+
+        adViewManagerListener.viewReadyForImmediateDisplay(mock(VideoCreativeView.class));
+        videoView.pause();
+
+        assertEquals(PAUSED_BY_USER, getVideoViewState());
+        verify(mockAdViewManager).pause();
+    }
+
+    @Test
+    public void viewReadyForImmediateDisplay_pausedByUser_StateKept() {
+        when(mockAdViewManager.isNotShowingEndCard()).thenReturn(true);
+        changeVideoViewState(PAUSED_BY_USER);
+
+        adViewManagerListener.viewReadyForImmediateDisplay(mock(VideoCreativeView.class));
+
+        assertEquals(PAUSED_BY_USER, getVideoViewState());
+    }
+
+    @Test
     public void viewReadyForImmediateDisplay_builtInControlsHidden_NoPrebidVolumeButton() throws Exception {
         final VideoCreativeView mockVideoCreativeView = mock(VideoCreativeView.class);
         when(mockAdViewManager.isNotShowingEndCard()).thenReturn(true);
@@ -559,4 +595,23 @@ public class VideoViewTest {
     //     WhiteBox.field(VideoView.class, "currentCreativeShown").set(videoView, simpleVideoCreative);
     //     return simpleVideoCreative;
     // }
+
+    @Test
+    public void startIfNotStarted_StateNotStarted_ShowAndTrue() {
+        changeVideoViewState(PLAYBACK_NOT_STARTED);
+
+        assertTrue(videoView.startIfNotStarted());
+
+        verify(mockAdViewManager).show();
+        assertEquals(PLAYING, getVideoViewState());
+    }
+
+    @Test
+    public void startIfNotStarted_AlreadyPlaying_False() {
+        changeVideoViewState(PLAYING);
+
+        assertFalse(videoView.startIfNotStarted());
+
+        verify(mockAdViewManager, never()).show();
+    }
 }

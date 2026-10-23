@@ -422,10 +422,21 @@ public class VideoCreative extends VideoCreativeProtocol
         }
 
         VideoPlayerView plugPlayVideoView = videoCreativeView.getVideoPlayerView();
-        int duration = plugPlayVideoView.getDuration();
+        // The start is tracked as playback begins, often before the player knows the media's length
+        // (its getDuration() is then -1). Open Measurement throws on a duration that is not positive,
+        // on the main thread, so the VAST's <Duration> stands in until the player has one, and the
+        // start is not reported to it at all when neither is known.
+        long durationMs = plugPlayVideoView.getDuration();
+        if (durationMs <= 0) {
+            durationMs = getMediaDuration();
+        }
+        if (durationMs <= 0) {
+            LogUtil.error(TAG, "trackVideoAdStart: media duration unknown, Open Measurement start not tracked.");
+            return;
+        }
         float volume = plugPlayVideoView.getVolume();
 
-        model.trackVideoAdStarted(duration, volume);
+        model.trackVideoAdStarted(durationMs, volume);
     }
 
     protected void complete() {

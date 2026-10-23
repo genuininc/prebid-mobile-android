@@ -624,6 +624,23 @@ public class BannerView extends FrameLayout {
         adUnitConfig.setBuiltInVideoControlsVisible(visible);
     }
 
+    /**
+     * Whether the video starts by itself once loaded. On by default. An app that loads an ad ahead
+     * and plays it later turns it off and starts it with {@link #startVideo()}: until then nothing
+     * plays and no impression is counted. Set before {@link #loadAd()}.
+     */
+    public void setVideoAutoStart(boolean autoStart) {
+        adUnitConfig.setVideoAutoStart(autoStart);
+    }
+
+    /**
+     * Starts a loaded video that does not start by itself ({@link #setVideoAutoStart(boolean)}).
+     * Returns false when there is no loaded video to start.
+     */
+    public boolean startVideo() {
+        return displayView != null && displayView.startVideo();
+    }
+
     /** Pauses the video. It stays paused until {@link #resumeVideo()}, whatever its visibility does. */
     public void pauseVideo() {
         if (displayView != null) {

@@ -105,6 +105,33 @@ public class VideoCreativeTest {
     }
 
     @Test
+    public void adStart_whenPlayerHasNoDurationYet_tracksTheVastDuration() {
+        videoCreative.setCreativeViewListener(mock(CreativeViewListener.class));
+        VideoPlayerView mockView = mock(VideoPlayerView.class);
+        when(mockView.getDuration()).thenReturn(-1);
+        when(mockView.getVolume()).thenReturn(1f);
+        when(mockVideoCreativeView.getVideoPlayerView()).thenReturn(mockView);
+        when(mockModel.getMediaDuration()).thenReturn(7_000L);
+
+        videoCreative.onEvent(VideoAdEvent.Event.AD_START);
+
+        verify(mockModel).trackVideoAdStarted(7_000f, 1f);
+    }
+
+    @Test
+    public void adStart_whenNoDurationIsKnown_doesNotTrackTheStart() {
+        videoCreative.setCreativeViewListener(mock(CreativeViewListener.class));
+        VideoPlayerView mockView = mock(VideoPlayerView.class);
+        when(mockView.getDuration()).thenReturn(-1);
+        when(mockVideoCreativeView.getVideoPlayerView()).thenReturn(mockView);
+        when(mockModel.getMediaDuration()).thenReturn(0L);
+
+        videoCreative.onEvent(VideoAdEvent.Event.AD_START);
+
+        verify(mockModel, never()).trackVideoAdStarted(anyFloat(), anyFloat());
+    }
+
+    @Test
     public void trackAdVideoEventTest() throws Exception {
         CreativeViewListener mockCreativeViewListener = mock(CreativeViewListener.class);
         VideoPlayerView mockView = mock(VideoPlayerView.class);

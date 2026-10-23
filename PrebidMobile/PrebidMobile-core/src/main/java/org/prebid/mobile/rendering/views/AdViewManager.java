@@ -223,7 +223,8 @@ public class AdViewManager implements CreativeViewListener, TransactionManagerLi
         boolean result = adConfiguration.isAdType(AdFormat.BANNER);
         if (builtInVideoFirstStart) {
             builtInVideoFirstStart = false;
-            result = result || adConfiguration.isBuiltInVideo();
+            // A video an app starts itself (see AdUnitConfiguration#isVideoAutoStart) waits for it.
+            result = result || (adConfiguration.isBuiltInVideo() && adConfiguration.isVideoAutoStart());
         }
         return result;
     }

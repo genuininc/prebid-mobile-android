@@ -80,6 +80,14 @@ public class VideoView extends BaseAdView {
         @Override
         public void viewReadyForImmediateDisplay(View view) {
             if (adViewManager.isNotShowingEndCard()) {
+                // The creative may be displayed by AdViewManager itself, as it auto-displays on load,
+                // rather than through play(). It is playing now either way: left "not started", the
+                // visibility tracker would play() it again and, while the player is still buffering,
+                // start it a second time, tracking creativeView and start twice. It also could not
+                // be paused, by the app or when it goes off screen.
+                if (isInState(State.PLAYBACK_NOT_STARTED)) {
+                    changeState(State.PLAYING);
+                }
                 listener.onDisplayed(VideoView.this);
             }
             removeAllViews();
@@ -251,6 +259,15 @@ public class VideoView extends BaseAdView {
 
         changeState(State.PLAYING);
         adViewManager.resume();
+    }
+
+    /** Plays a loaded video that has not started yet; false when it cannot be started. */
+    public boolean startIfNotStarted() {
+        if (!canPlay()) {
+            return false;
+        }
+        play();
+        return true;
     }
 
     public void play() {

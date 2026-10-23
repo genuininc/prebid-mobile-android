@@ -232,6 +232,11 @@ public class PrebidDisplayView extends FrameLayout implements PrebidDestroyable 
         return videoView != null && videoView.isVideoPlaybackInProgress();
     }
 
+    /** Starts the loaded video; false when there is none or it has already started. */
+    public boolean startVideo() {
+        return videoView != null && videoView.startIfNotStarted();
+    }
+
     public void pauseVideo() {
         if (videoView != null) {
             videoView.pause();
@@ -290,6 +295,8 @@ public class PrebidDisplayView extends FrameLayout implements PrebidDestroyable 
         videoView = new VideoView(getContext(), adUnitConfiguration);
         videoView.setVideoViewListener(videoViewListener);
         videoView.setVideoPlayerClick(true);
+        // Otherwise it starts as soon as it is visible; the app starts it (startVideo()).
+        videoView.setAutoPlay(adUnitConfiguration.isVideoAutoStart());
         videoView.loadAd(adUnitConfiguration, response);
         addView(videoView);
     }
