@@ -2,6 +2,13 @@
 // release (scripts/Maven) under a fork version.
 //
 //   ./gradlew publishGenuinToMavenLocal        # into ~/.m2, for local development
+//   ./gradlew publishGenuinToGitHubPackages    # to GitHub Packages, what Genuin's SDK builds resolve
+//
+// GitHub Packages needs a token with write:packages to publish (read:packages to consume): gpr.user
+// and gpr.key in ~/.gradle/gradle.properties, or the GITHUB_ACTOR and GITHUB_TOKEN env vars on CI.
+// The fork is private to Genuin's SDK: it is published under the private genuininc/genuin_android
+// repository (a package takes its repository's visibility, and this fork's repository is public),
+// and never to Maven Central.
 //
 // What is published, and why this way:
 //  - org.prebid:prebid-mobile-sdk-core:<forkVersion> — the core module's release AAR, the one
@@ -19,6 +26,17 @@
 // Prebid Server in every bid request — stays prebidSdkVersionName, so demand sees a normal SDK.
 
 ext.genuinForkVersion = "${prebidSdkVersionName}-genuin.8"
+
+def gitHubPackages = { RepositoryHandler repositories ->
+    repositories.maven {
+        name = 'GitHubPackages'
+        url = 'https://maven.pkg.github.com/genuininc/genuin_android'
+        credentials {
+            username = findProperty('gpr.user') ?: System.getenv('GITHUB_ACTOR')
+            password = findProperty('gpr.key') ?: System.getenv('GITHUB_TOKEN')
+        }
+    }
+}
 
 def officialPom = { String module -> rootProject.file("scripts/Maven/${module}-pom.xml") }
 
@@ -54,6 +72,7 @@ def describe = { MavenPom pom, String pomFile ->
 project(':PrebidMobile-core') {
     afterEvaluate {
         publishing {
+            repositories { gitHubPackages(it) }
             publications {
                 genuinCore(MavenPublication) {
                     groupId = rootProject.artifactGroupId
@@ -82,6 +101,7 @@ project(':PrebidMobile') {
 
     afterEvaluate {
         publishing {
+            repositories { gitHubPackages(it) }
             publications {
                 genuinUmbrella(MavenPublication) {
                     groupId = rootProject.artifactGroupId
@@ -108,4 +128,11 @@ tasks.register('publishGenuinToMavenLocal') {
     description = "Publishes the Genuin fork (${genuinForkVersion}) of prebid-mobile-sdk and -core to ~/.m2."
     dependsOn ':PrebidMobile-core:publishGenuinCorePublicationToMavenLocal',
               ':PrebidMobile:publishGenuinUmbrellaPublicationToMavenLocal'
+}
+
+tasks.register('publishGenuinToGitHubPackages') {
+    group = 'publishing'
+    description = "Publishes the Genuin fork (${genuinForkVersion}) of prebid-mobile-sdk and -core to GitHub Packages."
+    dependsOn ':PrebidMobile-core:publishGenuinCorePublicationToGitHubPackagesRepository',
+              ':PrebidMobile:publishGenuinUmbrellaPublicationToGitHubPackagesRepository'
 }
