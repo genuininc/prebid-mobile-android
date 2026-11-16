@@ -21,6 +21,8 @@ import android.util.Log;
 import androidx.annotation.NonNull;
 import androidx.annotation.VisibleForTesting;
 import org.prebid.mobile.LogUtil;
+import org.prebid.mobile.PrebidMobile;
+import org.prebid.mobile.VastWrapperUrlDecorator;
 import org.prebid.mobile.api.exceptions.AdException;
 import org.prebid.mobile.rendering.errors.VastParseError;
 import org.prebid.mobile.rendering.models.internal.VastExtractorResult;
@@ -131,7 +133,7 @@ public class VastParserExtractor {
                 return;
             }
 
-            asyncVastLoader.loadVast(vastUrl, responseHandler);
+            asyncVastLoader.loadVast(decorateWrapperUrl(vastUrl), responseHandler);
         }
         else {
             final AdResponseParserBase[] parserArray = {rootVastParser, latestVastWrapperParser};
@@ -153,5 +155,24 @@ public class VastParserExtractor {
 
     public interface Listener {
         void onResult(VastExtractorResult result);
+    }
+
+    /**
+     * The wrapper's tag as the app's {@link VastWrapperUrlDecorator} rewrites it, or as the VAST
+     * names it when there is no decorator, or it fails or returns nothing.
+     */
+    @VisibleForTesting
+    static String decorateWrapperUrl(String vastUrl) {
+        VastWrapperUrlDecorator decorator = PrebidMobile.getVastWrapperUrlDecorator();
+        if (decorator == null) {
+            return vastUrl;
+        }
+        try {
+            String decorated = decorator.decorate(vastUrl);
+            return TextUtils.isEmpty(decorated) ? vastUrl : decorated;
+        } catch (Exception e) {
+            LogUtil.error(TAG, "VAST wrapper URL decorator failed: " + Log.getStackTraceString(e));
+            return vastUrl;
+        }
     }
 }

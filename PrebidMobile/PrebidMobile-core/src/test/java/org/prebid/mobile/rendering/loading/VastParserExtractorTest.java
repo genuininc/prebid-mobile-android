@@ -22,6 +22,7 @@ import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.prebid.mobile.PrebidMobile;
 import org.prebid.mobile.api.exceptions.AdException;
 import org.prebid.mobile.rendering.models.internal.VastExtractorResult;
 import org.prebid.mobile.rendering.networking.modelcontrollers.AsyncVastLoader;
@@ -101,6 +102,34 @@ public class VastParserExtractorTest {
         final VastExtractorResult value = argument.getValue();
         assertTrue(value.hasException());
         assertEquals(exception.getMessage(), value.getAdException().getMessage());
+    }
+
+    @Test
+    public void wrapperWithDecorator_FetchesDecoratedUrl() throws IOException {
+        PrebidMobile.setVastWrapperUrlDecorator(url -> url + "?givn=nonce");
+        try {
+            String responseString = ResourceUtils.convertResourceToString("vast_wrapper_linear_nonlinear.xml");
+            vastParserExtractor.extract(responseString);
+            verify(mockAsyncVastLoader).loadVast(eq("http://SecondaryAdServer.vast.tag?givn=nonce"), any());
+        } finally {
+            PrebidMobile.setVastWrapperUrlDecorator(null);
+        }
+    }
+
+    @Test
+    public void decoratorFailsOrReturnsNothing_FetchesTagUnchanged() {
+        String tag = "http://SecondaryAdServer.vast.tag";
+        try {
+            assertEquals(tag, VastParserExtractor.decorateWrapperUrl(tag));
+            PrebidMobile.setVastWrapperUrlDecorator(url -> "");
+            assertEquals(tag, VastParserExtractor.decorateWrapperUrl(tag));
+            PrebidMobile.setVastWrapperUrlDecorator(url -> {
+                throw new IllegalStateException("boom");
+            });
+            assertEquals(tag, VastParserExtractor.decorateWrapperUrl(tag));
+        } finally {
+            PrebidMobile.setVastWrapperUrlDecorator(null);
+        }
     }
 
     @Test

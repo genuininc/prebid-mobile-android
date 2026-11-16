@@ -121,6 +121,9 @@ public class PrebidMobile {
      */
     private static boolean filterOutUncachedBids = false;
 
+    @Nullable
+    private static VastWrapperUrlDecorator vastWrapperUrlDecorator = null;
+
     private static int timeoutMillis = 2_000;
     private static boolean isTimeoutModified = false;
 
@@ -191,6 +194,23 @@ public class PrebidMobile {
      */
     public static void setFilterOutUncachedBids(boolean filterOutUncachedBids) {
         PrebidMobile.filterOutUncachedBids = filterOutUncachedBids;
+    }
+
+    /**
+     * {@link #setVastWrapperUrlDecorator(VastWrapperUrlDecorator)}
+     */
+    @Nullable
+    public static VastWrapperUrlDecorator getVastWrapperUrlDecorator() {
+        return vastWrapperUrlDecorator;
+    }
+
+    /**
+     * Sets what rewrites a VAST wrapper's tag URL before the Rendering API fetches it, such as adding
+     * the Google PAL nonce to a Google Ad Manager tag. {@code null} (the default) fetches every
+     * wrapper's tag as the VAST names it.
+     */
+    public static void setVastWrapperUrlDecorator(@Nullable VastWrapperUrlDecorator decorator) {
+        vastWrapperUrlDecorator = decorator;
     }
 
     /**
