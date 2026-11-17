@@ -46,6 +46,9 @@ public class AdResponseParserVastTest {
     private final static String VAST_BOM = "vast_bom";
     private final static String VAST_CORRECT = "vast.xml";
     private final static String WRONG_VAST_WITH_NO_AD = "vast_noad.xml";
+    // Google Ad Manager's own responses (its IMA sample tags), as a GAM wrapper bid resolves to.
+    private final static String GAM_SKIPPABLE = "vast_gam_inline_skippable.xml";
+    private final static String GAM_VERTICAL = "vast_gam_inline_vertical.xml";
 
     @Test
     public void testSupportedVideoFormat() throws Exception {
@@ -63,6 +66,21 @@ public class AdResponseParserVastTest {
         assertTrue("Input is not video/mkv. Hence not supported" + typeMkv, AdResponseParserVast.supportedVideoFormat(typeMkv));
         String wrongMkv = "video/mkvmkv";
         assertFalse("Input is not video/mkv. Hence not supported" + wrongMkv, AdResponseParserVast.supportedVideoFormat(wrongMkv));
+    }
+
+    @Test
+    public void testGoogleAdManagerInline() throws Exception {
+        // GAM nests elements in a CreativeExtension (<UniversalAdId>) and in its AdChoices icon.
+        for (String file : Arrays.asList(GAM_SKIPPABLE, GAM_VERTICAL)) {
+            AdResponseParserVastHelper vast = new AdResponseParserVastHelper(ResourceUtils.convertResourceToString(file));
+            org.prebid.mobile.rendering.video.vast.InLine inline = vast.getVast().getAds().get(0).getInline();
+            assertTrue(file, inline.getAdTitle().getValue().startsWith("External - Single"));
+            org.prebid.mobile.rendering.video.vast.Linear linear = inline.getCreatives().get(0).getLinear();
+            assertFalse(file, linear.getMediaFiles().isEmpty());
+            assertEquals(file, "00:00:10", linear.getDuration().getValue());
+        }
+        AdResponseParserVastHelper skippable = new AdResponseParserVastHelper(ResourceUtils.convertResourceToString(GAM_SKIPPABLE));
+        assertEquals("00:00:05", skippable.getVast().getAds().get(0).getInline().getCreatives().get(0).getLinear().getSkipOffset());
     }
 
     @Test

@@ -21,12 +21,42 @@ import org.xmlpull.v1.XmlPullParserException;
 
 import java.io.IOException;
 
-public class CreativeExtension extends BaseValue
+/**
+ * One {@code <CreativeExtension>}: its text, or the text inside the elements it holds. A creative
+ * extension may hold elements of its own — Google Ad Manager puts a {@code <UniversalAdId>} in one —
+ * so it is read through to its own end tag rather than as plain text, which would fail the whole
+ * VAST on the first nested element.
+ */
+public class CreativeExtension extends VASTParserBase
 {
+    private final String value;
 
 	public CreativeExtension(XmlPullParser p) throws XmlPullParserException, IOException
 	{
-		super(p);
+		StringBuilder text = new StringBuilder();
+		int depth = 1;
+		while (depth > 0) {
+			switch (p.next()) {
+				case XmlPullParser.START_TAG:
+					depth++;
+					break;
+				case XmlPullParser.END_TAG:
+					depth--;
+					break;
+				case XmlPullParser.TEXT:
+				case XmlPullParser.CDSECT:
+					text.append(p.getText());
+					break;
+				case XmlPullParser.END_DOCUMENT:
+					throw new XmlPullParserException("CreativeExtension is not closed", p, null);
+				default:
+					break;
+			}
+		}
+		value = text.toString().trim();
 	}
 
+	public String getValue() {
+		return value;
+	}
 }
