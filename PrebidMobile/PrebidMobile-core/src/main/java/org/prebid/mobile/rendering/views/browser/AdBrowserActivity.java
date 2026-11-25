@@ -64,18 +64,35 @@ public final class AdBrowserActivity extends Activity
     private String url;
 
     //jira/browse/MOBILE-1222 - Enable physical BACK button of the device in the in-app browser in Android
+    // The browser closes on the BACK key's release, not its press: finishing on the press leaves the
+    // release to the window under the browser, which takes it as a BACK of its own and closes too.
     @Override
     public boolean onKeyDown(
             int keyCode,
             KeyEvent event
     ) {
-        if ((keyCode == KeyEvent.KEYCODE_BACK)) {
+        if (keyCode == KeyEvent.KEYCODE_BACK) {
+            event.startTracking();
+            return true;
+        }
+        return super.onKeyDown(keyCode, event);
+    }
+
+    @Override
+    public boolean onKeyUp(
+            int keyCode,
+            KeyEvent event
+    ) {
+        if (keyCode == KeyEvent.KEYCODE_BACK && event.isTracking() && !event.isCanceled()) {
             if (webView != null) {
                 webView.goBack();
             }
+            // Closed as the close button closes it, so the ad hears its landing page was closed.
             finish();
+            sendLocalBroadcast(IntentActions.ACTION_BROWSER_CLOSE);
+            return true;
         }
-        return super.onKeyDown(keyCode, event);
+        return super.onKeyUp(keyCode, event);
     }
 
     @Override
