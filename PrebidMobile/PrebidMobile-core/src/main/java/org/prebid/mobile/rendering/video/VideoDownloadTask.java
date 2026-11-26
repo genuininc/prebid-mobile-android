@@ -90,8 +90,9 @@ public class VideoDownloadTask extends FileDownloadTask {
     }
 
     /**
-     * Copies the response into {@code out}; false when the task was cancelled, in which case
-     * {@code deleteOnAbort} (if any) is deleted.
+     * Copies the response into {@code out}; false when the task was cancelled. {@code deleteOnAbort}
+     * (if any) is deleted when the copy does not complete — cancelled, failed, over the SDK cap or
+     * empty — so no partial download is left behind.
      */
     private boolean readAndWriteData(URLConnection in, GetUrlResult result, OutputStream out,
                                      File deleteOnAbort) throws IOException {
@@ -111,6 +112,7 @@ public class VideoDownloadTask extends FileDownloadTask {
                     return false;
                 }
                 total += count;
+                checkDownloadedSize(total);
                 // publishing the progress....
                 if (length > 0) // only if total length is known
                 {
@@ -118,8 +120,12 @@ public class VideoDownloadTask extends FileDownloadTask {
                 }
                 out.write(data, 0, count);
             }
+            checkNotEmpty(total);
         }
         catch (IOException e) {
+            if (deleteOnAbort != null && deleteOnAbort.exists()) {
+                deleteOnAbort.delete();
+            }
             throw e;
         }
         finally {

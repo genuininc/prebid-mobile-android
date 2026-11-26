@@ -74,6 +74,23 @@ public class FileDownloadTask extends BaseNetworkTask {
         return 25 * 1024 * 1024; // 25 MiB
     }
 
+    /**
+     * The SDK cap, held on the bytes read so far: a server that does not state the size up front
+     * (see customParser) is stopped once it passes the cap.
+     */
+    protected void checkDownloadedSize(long downloaded) throws IOException {
+        if (!ignoreContentLength && downloaded > getMaxFileSize()) {
+            throw new IOException("FileDownloader encountered a file larger than SDK cap of " + getMaxFileSize());
+        }
+    }
+
+    /** A download that turned out empty is not a file: a size the server did not state was 0. */
+    protected void checkNotEmpty(long downloaded) throws IOException {
+        if (!ignoreContentLength && downloaded <= 0) {
+            throw new IOException("FileDownloader encountered an empty file");
+        }
+    }
+
     @Override
     public GetUrlResult customParser(int code, URLConnection urlConnection) {
         GetUrlResult result = new GetUrlResult();
@@ -84,12 +101,15 @@ public class FileDownloadTask extends BaseNetworkTask {
         }
         try {
             if (!ignoreContentLength) {
+                // -1 is a size the server did not state (a chunked response, or a gzip one the
+                // connection unzips): the file is downloaded, and the cap is held on the bytes read
+                // instead (checkDownloadedSize).
                 int contentLength = urlConnection.getContentLength();
                 if (contentLength > getMaxFileSize()) {
                     result.setException(new Exception("FileDownloader encountered a file larger than SDK cap of " + getMaxFileSize()));
                     return result;
                 }
-                if (contentLength <= 0) {
+                if (contentLength == 0) {
                     result.setException(new Exception("FileDownloader encountered file with " + contentLength + " content length"));
                     return result;
                 }
@@ -115,10 +135,14 @@ public class FileDownloadTask extends BaseNetworkTask {
             outputStream = new FileOutputStream(file);
             inputStream = connection.getInputStream();
             byte[] data = new byte[16384];
+            long total = 0;
             int count;
             while ((count = inputStream.read(data)) != -1) {
+                total += count;
+                checkDownloadedSize(total);
                 outputStream.write(data, 0, count);
             }
+            checkNotEmpty(total);
         }
         catch (IOException e) {
             throw e;
